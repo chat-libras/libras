@@ -43,8 +43,8 @@ class NotConfiguredASR implements CloudASR {
   constructor(private cb: CloudASRCallbacks) {}
   async start(): Promise<void> {
     this.cb.onError(
-      'ASR de nuvem não configurado. Defina um provedor em src/engine/audio/asr-config.ts ' +
-        '(ex.: Deepgram com API key) para traduzir o áudio da aba. O microfone funciona sem isso.'
+      'ASR de nuvem não configurado. Passe asr={{ provider: "deepgram", apiKey }} ' +
+        '(ver docs/GUIA.md) para traduzir o áudio da chamada. O microfone funciona sem isso.'
     );
   }
   stop(): void {}

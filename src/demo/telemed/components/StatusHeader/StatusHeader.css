@@ -1,5 +1,0 @@
-.tm__header { flex: 0 0 auto; display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-.tm__header h1 { font-size: 1.5rem; margin: 0; }
-.tm__status { font-size: 0.8rem; padding: 3px 10px; border-radius: 999px; background: var(--panel-2); color: var(--muted); }
-.tm__status--listening { background: #143024; color: var(--ok); }
-.tm__status--error { background: #3a1f27; color: var(--rec); }

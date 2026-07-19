@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { createVLibrasPlayer, type VLibrasLoaderOptions } from '../core/vlibras-loader';
-import { VLibrasSignRenderer } from '../core/vlibras-renderer';
+import type { VLibrasLoaderOptions } from '../core/vlibras-loader';
+import { useLibrasAvatar, type LibrasAvatarApi } from './useLibrasAvatar';
 import {
   createPhraseSource,
   type AudioSource,
@@ -13,7 +13,9 @@ import {
 // áudio (microfone ou stream de chamada) para Libras em tempo real, com fila
 // sincronizada (frases não se atropelam).
 //
-// Uso típico em telemedicina (traduzir a fala do médico para o paciente surdo):
+// Compõe `useLibrasAvatar` (só o avatar/fila) e acrescenta a camada de ASR
+// (start/parar/escuta/interim). Uso típico em telemedicina (traduzir a fala do
+// médico para o paciente surdo):
 //
 //   const libras = useLibrasTranslator({
 //     audio: { kind: 'stream', stream: remoteAudioStream },  // faixa de áudio do WebRTC
@@ -57,11 +59,7 @@ export interface LibrasTranslatorApi {
   setSpeed: (speed: number) => void;
 }
 
-// Singletons: o Unity/WebGL do VLibras é pesado e só deve existir uma vez
-// (StrictMode monta 2×; múltiplos renderers = múltiplos listeners = repetição).
-let rendererSingleton: VLibrasSignRenderer | null = null;
-
-function resolveAsr(audio: AudioSource, asr?: ASROptions): ASROptions {
+export function resolveAsr(audio: AudioSource, asr?: ASROptions): ASROptions {
   if (asr) return asr;
   // Sem ASR explícito: microfone usa Web Speech (grátis); stream exige nuvem.
   if (audio.kind === 'microphone') return { provider: 'webspeech', lang: 'pt-BR' };
@@ -71,90 +69,78 @@ function resolveAsr(audio: AudioSource, asr?: ASROptions): ASROptions {
 export function useLibrasTranslator(options: UseLibrasTranslatorOptions): LibrasTranslatorApi {
   const { audio, asr, vlibras, autoStart = true, speed: initialSpeed = 1, onTranscript } = options;
 
-  const containerRef = useRef<HTMLDivElement>(null);
   const sourceRef = useRef<PhraseSource | null>(null);
   const optsRef = useRef({ audio, asr, onTranscript });
   optsRef.current = { audio, asr, onTranscript };
 
-  const [status, setStatus] = useState<LibrasStatus>('loading');
-  const [error, setError] = useState<string | null>(null);
   const [interim, setInterim] = useState('');
   const [listening, setListening] = useState(false);
-  const [speed, setSpeedState] = useState(initialSpeed);
+  const [asrError, setAsrError] = useState<string | null>(null);
 
-  const setSpeed = useCallback((value: number) => {
-    setSpeedState(value);
-    rendererSingleton?.setSpeed(value);
-  }, []);
+  // O avatar (fila) é injetado abaixo; guardamos por ref para o start() usá-lo.
+  const avatarRef = useRef<LibrasAvatarApi | null>(null);
 
   const stop = useCallback(() => {
     sourceRef.current?.stop();
     sourceRef.current = null;
     setListening(false);
     setInterim('');
-    setStatus((s) => (s === 'listening' ? 'ready' : s));
   }, []);
 
   const start = useCallback(() => {
-    if (!rendererSingleton || sourceRef.current) return;
+    if (sourceRef.current) return;
     const { audio: a, asr: r, onTranscript: ot } = optsRef.current;
-    setError(null);
+    setAsrError(null);
     const source = createPhraseSource(a, resolveAsr(a, r), {
       onPhrase: (text) => {
-        rendererSingleton?.play(text);
+        avatarRef.current?.translate(text);
         ot?.(text);
       },
       onInterim: setInterim,
-      onError: (e) => {
-        setError(e);
-        setStatus('error');
-      },
-      onListening: (l) => {
-        setListening(l);
-        setStatus(l ? 'listening' : 'ready');
-      },
+      onError: (e) => setAsrError(e),
+      onListening: setListening,
     });
     sourceRef.current = source;
-    source.start().catch((e) => {
-      setError(String(e?.message ?? e));
-      setStatus('error');
-    });
+    source.start().catch((e) => setAsrError(String(e?.message ?? e)));
   }, []);
 
-  const translate = useCallback((text: string) => {
-    rendererSingleton?.play(text);
-  }, []);
+  const autoStartRef = useRef(autoStart);
+  autoStartRef.current = autoStart;
 
-  // Carrega o avatar do VLibras uma vez e (opcional) começa a ouvir.
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    let disposed = false;
+  const avatar = useLibrasAvatar({
+    vlibras,
+    speed: initialSpeed,
+    onReady: () => {
+      if (autoStartRef.current) start();
+    },
+  });
+  avatarRef.current = avatar;
 
-    createVLibrasPlayer(container, vlibras)
-      .then((player) => {
-        if (disposed) return;
-        if (!rendererSingleton) {
-          rendererSingleton = new VLibrasSignRenderer(player, { settleMs: 250 });
-        }
-        rendererSingleton.setSpeed(speed);
-        rendererSingleton.clear();
-        setStatus('ready');
-        if (autoStart) start();
-      })
-      .catch((e) => {
-        if (!disposed) {
-          setError(String(e?.message ?? e));
-          setStatus('error');
-        }
-      });
+  // Para de ouvir ao desmontar (o avatar/singleton se gerencia sozinho).
+  useEffect(() => () => stop(), [stop]);
 
-    return () => {
-      disposed = true;
-      stop();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // Status combinado: erro (avatar ou ASR) e carregamento do avatar dominam;
+  // senão, ouvindo → 'listening', ocioso → 'ready'.
+  const status: LibrasStatus =
+    avatar.status === 'error' || asrError
+      ? 'error'
+      : avatar.status === 'loading'
+        ? 'loading'
+        : listening
+          ? 'listening'
+          : 'ready';
+  const error = avatar.error ?? asrError;
 
-  return { containerRef, status, error, interim, listening, start, stop, translate, speed, setSpeed };
+  return {
+    containerRef: avatar.containerRef,
+    status,
+    error,
+    interim,
+    listening,
+    start,
+    stop,
+    translate: avatar.translate,
+    speed: avatar.speed,
+    setSpeed: avatar.setSpeed,
+  };
 }

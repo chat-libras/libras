@@ -34,7 +34,8 @@ export interface PhraseSource {
 }
 
 // Descarta frases vazias e a mesma frase repetida em <3s (ruído/eco).
-function makeDedup(onPhrase: (t: string) => void): (t: string) => void {
+// Exportado para reuso por fontes de texto ao vivo (ex.: legendas do Teams).
+export function makeDedup(onPhrase: (t: string) => void): (t: string) => void {
   let last = '';
   let at = 0;
   return (text: string) => {
