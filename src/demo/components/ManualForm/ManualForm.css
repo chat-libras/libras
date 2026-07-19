@@ -1,0 +1,23 @@
+.tm__manual {
+  display: flex;
+  height: 56px;
+  gap: 8px;
+}
+.tm__manual input {
+  flex: 1;
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid #33405c;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font: inherit;
+}
+.tm__manual button {
+  background: var(--panel-2);
+  color: var(--text);
+  border: 1px solid #33405c;
+  border-radius: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  font: inherit;
+}

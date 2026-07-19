@@ -1,0 +1,11 @@
+.tm__note {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin: 10px 0 0;
+}
+.tm__note code {
+  background: var(--panel-2);
+  padding: 1px 6px;
+  border-radius: 5px;
+}
