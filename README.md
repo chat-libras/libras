@@ -7,9 +7,6 @@ texto — com **fila sincronizada** (frases não se atropelam).
 
 > ⚠️ O VLibras é **LGPLv3** e roda em Unity/WebGL. Os sinais são oficiais e revisados.
 
-> 📖 **Novo por aqui?** Comece pelo **[Guia passo a passo](docs/GUIA.md)** — do zero à
-> produção, com integrações (Vonage, WebRTC, Teams). Para o design por dentro, veja a
-> **[documentação de arquitetura](docs/ARQUITETURA.md)**.
 
 ## O produto: `<LibrasChat>`
 
