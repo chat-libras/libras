@@ -15,6 +15,17 @@ import type { VLibrasPlayerLike } from './vlibras-renderer';
 //   player.setSpeed(n) / stop() / changeAvatar(nome)
 // ---------------------------------------------------------------------------
 
+// CDN oficial (jsDelivr) com os assets Unity. Responde 200 + CORS `*`, então
+// dispensa hospedar os ~13 MB de `target/` localmente. Os arquivos locais em
+// public/vlibras/target/ continuam servindo como fallback offline (basta passar
+// targetPath: '/vlibras/target' nas opções). Ver docs/vlibras-setup.md.
+//
+// Fixado no commit SHA da branch `sgd` (não em `@sgd`) para evitar que uma
+// mudança na branch quebre os assets. Para atualizar: pegue o novo SHA em
+// https://github.com/spbgovbr-vlibras/vlibras-portal e troque abaixo.
+const DEFAULT_TARGET_PATH =
+  'https://cdn.jsdelivr.net/gh/spbgovbr-vlibras/vlibras-portal@02c29088381b2c779bbbc5fde821d809f532c474/app/target';
+
 interface VLibrasPlayerFull extends VLibrasPlayerLike {
   load(wrapper: HTMLElement): void;
   changeAvatar?(name: string): void;
@@ -79,7 +90,7 @@ export async function createVLibrasPlayer(
   loadedContainer = container;
   playerPromise = (async () => {
     const VLibras = await ensureBundle(opts.bundleUrl ?? '/vlibras/vlibras.js');
-    const player = new VLibras.Player({ targetPath: opts.targetPath ?? '/vlibras/target' });
+    const player = new VLibras.Player({ targetPath: opts.targetPath ?? DEFAULT_TARGET_PATH });
     player.load(container);
     await new Promise<void>((resolve) => player.on(opts.loadEvent ?? 'load', () => resolve()));
     if (opts.avatar && player.changeAvatar) player.changeAvatar(opts.avatar);

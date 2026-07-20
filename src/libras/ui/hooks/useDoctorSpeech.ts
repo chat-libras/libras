@@ -4,7 +4,7 @@ import {
   type AudioSource,
   type ASROptions,
   type PhraseSource,
-} from '../../../core/asr/phrase-source';
+} from '../../core/asr/phrase-source';
 
 // Captura de fala do lado MÉDICO: liga/desliga a fonte de frases (ASR plugável)
 // e entrega cada frase final via `onPhrase`. Web Speech (grátis) por padrão, ou

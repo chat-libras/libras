@@ -11,33 +11,33 @@
 //   - createVLibrasPlayer            → carregador do player (avançado)
 // ===========================================================================
 
-export { useLibrasTranslator } from "./react/useLibrasTranslator";
+export { useLibrasTranslator } from "./ui/useLibrasTranslator";
 export type {
   UseLibrasTranslatorOptions,
   LibrasTranslatorApi,
   LibrasStatus,
-} from "./react/useLibrasTranslator";
+} from "./ui/useLibrasTranslator";
 
-export { LibrasTranslator } from "./react/LibrasTranslator";
+export { LibrasTranslator } from "./ui/LibrasTranslator";
 export type {
   LibrasTranslatorProps,
   LibrasControls,
-} from "./react/LibrasTranslator";
+} from "./ui/LibrasTranslator";
 
-export { LibrasChat } from "./react/LibrasChat";
+export { LibrasChat } from "./ui/LibrasChat";
 export type {
   LibrasChatProps,
   LibrasChatMessage,
   LibrasChatRole,
-} from "./react/LibrasChat";
+} from "./ui/LibrasChat";
 
 // Avatar-only (sinaliza texto pronto, sem ASR) — base do hook acima.
-export { useLibrasAvatar } from "./react/useLibrasAvatar";
+export { useLibrasAvatar } from "./ui/useLibrasAvatar";
 export type {
   UseLibrasAvatarOptions,
   LibrasAvatarApi,
   LibrasAvatarStatus,
-} from "./react/useLibrasAvatar";
+} from "./ui/useLibrasAvatar";
 
 export type { AudioSource, ASROptions } from "./core/asr/phrase-source";
 

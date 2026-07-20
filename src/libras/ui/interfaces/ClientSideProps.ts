@@ -1,4 +1,4 @@
-import type { VLibrasLoaderOptions } from '../../../core/vlibras-loader';
+import type { VLibrasLoaderOptions } from '../../core/vlibras-loader';
 import type { LibrasChatMessage, LibrasChatRole } from './LibrasChatProps';
 
 export interface ClientSideProps {

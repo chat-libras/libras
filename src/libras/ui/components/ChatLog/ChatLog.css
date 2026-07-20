@@ -1,0 +1,31 @@
+/* Log de mensagens (bolhas). As bolhas do próprio papel alinham à direita. */
+.libras-chat__log {
+  height: 220px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #eee;
+}
+.libras-chat__bubble {
+  max-width: 85%;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: #eef1f4;
+  color: #000;
+  font-size: 14px;
+  align-self: flex-start;
+}
+.libras-chat__bubble--mine {
+  align-self: flex-end;
+  background: #d7ebff;
+}
+.libras-chat__who {
+  display: block;
+  font-size: 10px;
+  color: #888;
+  text-transform: uppercase;
+}

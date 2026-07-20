@@ -1,4 +1,4 @@
-import type { AudioSource, ASROptions } from '../../../core/asr/phrase-source';
+import type { AudioSource, ASROptions } from '../../core/asr/phrase-source';
 import type { LibrasChatMessage, LibrasChatRole } from './LibrasChatProps';
 
 export interface DoctorSideProps {

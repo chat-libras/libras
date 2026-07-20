@@ -1,5 +1,5 @@
-import type { AudioSource, ASROptions } from '../../../core/asr/phrase-source';
-import type { VLibrasLoaderOptions } from '../../../core/vlibras-loader';
+import type { AudioSource, ASROptions } from '../../core/asr/phrase-source';
+import type { VLibrasLoaderOptions } from '../../core/vlibras-loader';
 
 export type LibrasChatRole = 'doctor' | 'client';
 

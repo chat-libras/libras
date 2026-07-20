@@ -1,0 +1,13 @@
+/* Formulário de envio de texto. */
+.libras-chat__form {
+  display: flex;
+  gap: 6px;
+}
+.libras-chat__form input {
+  flex: 1;
+  padding: 8px;
+}
+.libras-chat__form button {
+  padding: 8px 12px;
+  cursor: pointer;
+}

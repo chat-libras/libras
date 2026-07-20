@@ -1,0 +1,16 @@
+/* Container do chat + avisos compartilhados pelos dois lados (interim/erro).
+   Sobrescreva pelas classes `libras-chat__*` ou via a prop `className`. */
+.libras-chat {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-family: system-ui, sans-serif;
+}
+.libras-chat__interim {
+  color: #a60;
+  font-size: 13px;
+}
+.libras-chat__error {
+  color: crimson;
+  font-size: 13px;
+}
