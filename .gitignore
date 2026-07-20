@@ -9,8 +9,8 @@ dist-ssr/
 build/
 *.local
 
-# Assets Unity do VLibras (baixados localmente, ver docs/vlibras-setup.md)
-public/vlibras/
+# # Assets Unity do VLibras (baixados localmente, ver docs/vlibras-setup.md)
+# public/vlibras/
 
 # Variáveis de ambiente
 .env
