@@ -66,8 +66,8 @@ O bundle é o player oficial open-source do governo federal:
 
 O `vlibras.js` aponta internamente para os serviços oficiais:
 
-- `https://dicionario2-dth.vlibras.gov.br/...` — dicionário de sinais
-- `https://traducao2-dth.vlibras.gov.br/dl/translate` — serviço de tradução
+- `https://dicionario2.vlibras.gov.br/...` — dicionário de sinais
+- `https://traducao2.vlibras.gov.br/translate` — serviço de tradução
 
 ## Reconstruir a pasta local (só se precisar de offline)
 
