@@ -39,12 +39,15 @@ declare global {
   }
 }
 
-// Endpoint PT→glosa auto-hospedado (proxied same-origin pelo Vite → API :3000).
-// O endpoint público do gov.br (traducao2-dth.vlibras.gov.br/dl/translate) passou
-// a exigir autorização (HTTP 401); sem glosa, o player SOLETRA tudo (datilologia).
-// Este endpoint devolve a glosa e restaura os sinais de palavras.
-// Ver docker-compose.translator.yml e docs/vlibras-setup.md.
-const DEFAULT_TRANSLATOR_URL = '/vlibras-translate';
+// Endpoint PT→glosa do VLibras. Usa o host NOVO (sem `-dth`), que é público, sem
+// auth e COM CORS (`access-control-allow-origin`). O host antigo
+// (traducao2-dth.vlibras.gov.br/dl/translate) passou a exigir autorização (401);
+// sem glosa, o player SOLETRA tudo (datilologia) em vez de sinalizar palavras.
+// O dicionário de sinais (dicionario2.vlibras.gov.br) também é CORS-enabled — a URL
+// dele vive no próprio bundle (public/vlibras/vlibras.js). Ver docs/vlibras-setup.md.
+// Para self-hosting (offline/independência), veja docker-compose.translator.yml e
+// passe `vlibras={{ translatorUrl: '/vlibras-translate' }}`.
+const DEFAULT_TRANSLATOR_URL = 'https://traducao2.vlibras.gov.br/translate';
 
 export interface VLibrasLoaderOptions {
   /** URL do bundle do player (define window.VLibras). */
@@ -52,9 +55,9 @@ export interface VLibrasLoaderOptions {
   /** URL onde estão os assets Unity (UnityLoader.js, playerweb.json, Build/). */
   targetPath?: string;
   /**
-   * Endpoint de tradução PT→glosa (POST {text} → corpo = glosa). Default
-   * `/vlibras-translate` (proxied para a API auto-hospedada). SEM isto, o player
-   * usa o endpoint público do gov.br, hoje 401, e soletra tudo (datilologia).
+   * Endpoint de tradução PT→glosa (POST {text} → corpo = glosa). Default: endpoint
+   * público do VLibras (`traducao2.vlibras.gov.br/translate`, com CORS). Para
+   * self-hosting, aponte para a sua API (ex.: `/vlibras-translate`).
    */
   translatorUrl?: string;
   /** Avatar: 'icaro' | 'hozana' | 'guga'. */

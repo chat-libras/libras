@@ -8,18 +8,10 @@ export default defineConfig({
   plugins: [react()],
   server: {
     open: true,
-    // Proxy same-origin para o tradutor PT→glosa auto-hospedado (evita CORS e
-    // mixed-content). Sobe com `docker compose -f docker-compose.translator.yml up -d`.
-    // O player do VLibras é configurado para POSTar em /vlibras-translate
-    // (ver src/libras/core/vlibras-loader.ts). Em produção, replique esta rota
-    // no seu servidor/edge apontando para a API do tradutor (:3000/translate).
-    proxy: {
-      '/vlibras-translate': {
-        target: 'http://localhost:3000',
-        changeOrigin: true,
-        rewrite: (p) => p.replace(/^\/vlibras-translate$/, '/translate'),
-      },
-    },
+    // Nota: o tradutor PT→glosa e o dicionário de sinais usam os endpoints
+    // públicos do VLibras (hosts sem `-dth`), que têm CORS — não é preciso proxy.
+    // Só habilite um proxy /vlibras-translate se optar por self-hosting
+    // (ver docker-compose.translator.yml).
   },
   build: {
     target: 'es2022',

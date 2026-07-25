@@ -123,55 +123,58 @@ Se preferir servir os assets de outro lugar (CDN, subpasta), passe `bundleUrl` e
 `targetPath` nas opções do plugin `vlibras` — ver a tabela de configuração no
 [README](../README.md).
 
-## Tradutor PT→glosa (auto-hospedado) — por que o avatar NÃO pode soletrar tudo
+## Por que o avatar soletrava tudo (e a correção)
 
-O `player.translate(texto)` do VLibras trabalha em **duas etapas**:
+O `player.translate(texto)` do VLibras trabalha em **duas etapas**, ambas via HTTP:
 
-1. **Texto → glosa**: um `POST` converte o português em **glosa de Libras**
-   (ex.: `eu estou com dor de cabeça` → `EU DOR&CABEÇA`). É a glosa que aciona os
-   **sinais de palavras** no dicionário.
-2. **Glosa → animação**: os sinais de cada token são buscados e animados.
+1. **Texto → glosa** (`traducao2.vlibras.gov.br/translate`): converte o português em
+   **glosa de Libras** (ex.: `eu estou com dor de cabeça` → `EU DOR&CABEÇA`).
+2. **Glosa → animação** (`dicionario2.vlibras.gov.br/...`): para cada palavra da
+   glosa, baixa o **AssetBundle Unity do sinal** e anima.
 
-Se a etapa 1 **falha**, o player cai no fallback `play(texto.toUpperCase())` e o
-avatar **SOLETRA letra a letra (datilologia)** — porque texto cru não é glosa.
+Se **qualquer** etapa falha no browser, o player cai no fallback
+`play(texto.toUpperCase())` e o avatar **SOLETRA letra a letra (datilologia)**.
 
-O endpoint público do gov.br (`traducao2-dth.vlibras.gov.br/dl/translate`) passou
-a **exigir autorização (HTTP 401)**, então esse fallback disparava sempre. Por isso
-este projeto **auto-hospeda o tradutor** (imagens oficiais do `spbgovbr-vlibras`).
+**A causa raiz:** o bundle vinha apontando para os hosts **legados `-dth`**, que
+estão quebrados de dois jeitos:
 
-### Subir o tradutor
+| Etapa | Host `-dth` (antigo) | Host sem `-dth` (atual) |
+|-------|----------------------|-------------------------|
+| Tradução | `traducao2-dth.../dl/translate` → **401** (exige auth) | `traducao2.vlibras.gov.br/translate` → **200 + CORS** |
+| Dicionário | `dicionario2-dth...` → 200 mas **sem header CORS** (browser bloqueia) | `dicionario2.vlibras.gov.br/...` → **200 + CORS** |
+
+A correção é simplesmente usar os **hosts novos (sem `-dth`)**, que são públicos,
+sem autenticação e com `Access-Control-Allow-Origin` — funcionam direto do browser,
+sem proxy. Onde ficam:
+
+- **Dicionário de sinais:** URLs dentro do próprio bundle `public/vlibras/vlibras.js`
+  (`dictionaryUrl` / `dictionaryStaticUrl`).
+- **Tradutor:** default em `vlibras-loader.ts` (`DEFAULT_TRANSLATOR_URL`), passado ao
+  `Player({ translator })`. Sobrescreva com `vlibras={{ translatorUrl: '...' }}`.
+
+> Depois de trocar os hosts, faça **hard reload** (Cmd+Shift+R): o browser mantém o
+> `vlibras.js` antigo em cache e continua batendo nos hosts `-dth`.
+
+Teste rápido dos endpoints públicos:
+
+```bash
+curl -s -XPOST https://traducao2.vlibras.gov.br/translate \
+     -H 'content-type: application/json' \
+     -d '{"text":"eu estou com dor de cabeça"}'   # -> EU DOR&CABEÇA
+```
+
+## (Opcional) Self-hosting do tradutor
+
+Só é necessário se você quiser rodar **offline** ou independente do gov.br. O
+`docker-compose.translator.yml` sobe o tradutor oficial (`translator-api` 2.1.4 +
+`text-core` + RabbitMQ + Redis + MongoDB), expondo `POST /translate` em `:3000`.
 
 ```bash
 docker compose -f docker-compose.translator.yml up -d
 ```
 
-Sobe 5 serviços: `translator-api` (HTTP :3000) + `translator-text-core` (Python,
-faz PT→glosa) + RabbitMQ + Redis + MongoDB. A 1ª subida baixa imagens grandes; o
-text-core leva ~1 min para conectar na fila (até lá a API responde 500).
-
-**Contrato:** `POST /translate` com `{"text":"..."}` → `200` com a **glosa em texto
-puro** no corpo. Teste:
-
-```bash
-curl -s -XPOST localhost:3000/translate -H 'content-type: application/json' \
-     -d '{"text":"eu estou com dor de cabeça"}'   # -> EU DOR&CABEÇA
-```
-
-### Como o app aponta para ele
-
-- **Dev:** o Vite faz proxy same-origin de `/vlibras-translate` → `:3000/translate`
-  (ver `vite.config.js`), evitando CORS/mixed-content.
-- **Loader:** `vlibras-loader.ts` passa `translator: '/vlibras-translate'` ao
-  `Player` (sobrescreve o endpoint 401 embutido no bundle). Para outro endpoint,
-  passe `vlibras={{ translatorUrl: '...' }}` nas opções do plugin.
-- **Produção:** replique a rota `/vlibras-translate` no seu servidor/edge apontando
-  para a API do tradutor (`:3000/translate`). Chamar a API direto do browser também
-  funciona (ela habilita CORS), mas o proxy same-origin é mais limpo.
-
-### Notas
-
-- **Modo de tradução:** `ENABLE_DL_TRANSLATION=false` (por regras) no compose — leve
-  e suficiente para os sinais. O modo neural (`true`) dá glosa melhor, mas falha sob
-  emulação amd64 (Apple Silicon); habilite em host x86_64 se quiser.
-- **arm64/Apple Silicon:** as imagens do VLibras são amd64-only — o compose já força
-  `platform: linux/amd64` (rodam via emulação).
+Para o app usar: passe `vlibras={{ translatorUrl: '/vlibras-translate' }}` e adicione
+um proxy same-origin no Vite (`/vlibras-translate` → `http://localhost:3000/translate`).
+Notas: as imagens do VLibras são amd64-only (o compose força `platform: linux/amd64`,
+rodam via emulação em Apple Silicon); use `ENABLE_DL_TRANSLATION=false` (por regras) —
+o modo neural falha sob emulação amd64.
