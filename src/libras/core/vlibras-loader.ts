@@ -39,11 +39,24 @@ declare global {
   }
 }
 
+// Endpoint PT→glosa auto-hospedado (proxied same-origin pelo Vite → API :3000).
+// O endpoint público do gov.br (traducao2-dth.vlibras.gov.br/dl/translate) passou
+// a exigir autorização (HTTP 401); sem glosa, o player SOLETRA tudo (datilologia).
+// Este endpoint devolve a glosa e restaura os sinais de palavras.
+// Ver docker-compose.translator.yml e docs/vlibras-setup.md.
+const DEFAULT_TRANSLATOR_URL = '/vlibras-translate';
+
 export interface VLibrasLoaderOptions {
   /** URL do bundle do player (define window.VLibras). */
   bundleUrl?: string;
   /** URL onde estão os assets Unity (UnityLoader.js, playerweb.json, Build/). */
   targetPath?: string;
+  /**
+   * Endpoint de tradução PT→glosa (POST {text} → corpo = glosa). Default
+   * `/vlibras-translate` (proxied para a API auto-hospedada). SEM isto, o player
+   * usa o endpoint público do gov.br, hoje 401, e soletra tudo (datilologia).
+   */
+  translatorUrl?: string;
   /** Avatar: 'icaro' | 'hozana' | 'guga'. */
   avatar?: string;
   /** Nome do evento de "carregado". */
@@ -90,7 +103,12 @@ export async function createVLibrasPlayer(
   loadedContainer = container;
   playerPromise = (async () => {
     const VLibras = await ensureBundle(opts.bundleUrl ?? '/vlibras/vlibras.js');
-    const player = new VLibras.Player({ targetPath: opts.targetPath ?? DEFAULT_TARGET_PATH });
+    const player = new VLibras.Player({
+      targetPath: opts.targetPath ?? DEFAULT_TARGET_PATH,
+      // `translator` sobrescreve o endpoint PT→glosa embutido no bundle (gov.br,
+      // hoje 401). Sem isto, o player soletra tudo em vez de sinalizar palavras.
+      translator: opts.translatorUrl ?? DEFAULT_TRANSLATOR_URL,
+    });
     player.load(container);
     await new Promise<void>((resolve) => player.on(opts.loadEvent ?? 'load', () => resolve()));
     if (opts.avatar && player.changeAvatar) player.changeAvatar(opts.avatar);

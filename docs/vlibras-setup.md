@@ -122,3 +122,56 @@ confira os `200`:
 Se preferir servir os assets de outro lugar (CDN, subpasta), passe `bundleUrl` e
 `targetPath` nas opções do plugin `vlibras` — ver a tabela de configuração no
 [README](../README.md).
+
+## Tradutor PT→glosa (auto-hospedado) — por que o avatar NÃO pode soletrar tudo
+
+O `player.translate(texto)` do VLibras trabalha em **duas etapas**:
+
+1. **Texto → glosa**: um `POST` converte o português em **glosa de Libras**
+   (ex.: `eu estou com dor de cabeça` → `EU DOR&CABEÇA`). É a glosa que aciona os
+   **sinais de palavras** no dicionário.
+2. **Glosa → animação**: os sinais de cada token são buscados e animados.
+
+Se a etapa 1 **falha**, o player cai no fallback `play(texto.toUpperCase())` e o
+avatar **SOLETRA letra a letra (datilologia)** — porque texto cru não é glosa.
+
+O endpoint público do gov.br (`traducao2-dth.vlibras.gov.br/dl/translate`) passou
+a **exigir autorização (HTTP 401)**, então esse fallback disparava sempre. Por isso
+este projeto **auto-hospeda o tradutor** (imagens oficiais do `spbgovbr-vlibras`).
+
+### Subir o tradutor
+
+```bash
+docker compose -f docker-compose.translator.yml up -d
+```
+
+Sobe 5 serviços: `translator-api` (HTTP :3000) + `translator-text-core` (Python,
+faz PT→glosa) + RabbitMQ + Redis + MongoDB. A 1ª subida baixa imagens grandes; o
+text-core leva ~1 min para conectar na fila (até lá a API responde 500).
+
+**Contrato:** `POST /translate` com `{"text":"..."}` → `200` com a **glosa em texto
+puro** no corpo. Teste:
+
+```bash
+curl -s -XPOST localhost:3000/translate -H 'content-type: application/json' \
+     -d '{"text":"eu estou com dor de cabeça"}'   # -> EU DOR&CABEÇA
+```
+
+### Como o app aponta para ele
+
+- **Dev:** o Vite faz proxy same-origin de `/vlibras-translate` → `:3000/translate`
+  (ver `vite.config.js`), evitando CORS/mixed-content.
+- **Loader:** `vlibras-loader.ts` passa `translator: '/vlibras-translate'` ao
+  `Player` (sobrescreve o endpoint 401 embutido no bundle). Para outro endpoint,
+  passe `vlibras={{ translatorUrl: '...' }}` nas opções do plugin.
+- **Produção:** replique a rota `/vlibras-translate` no seu servidor/edge apontando
+  para a API do tradutor (`:3000/translate`). Chamar a API direto do browser também
+  funciona (ela habilita CORS), mas o proxy same-origin é mais limpo.
+
+### Notas
+
+- **Modo de tradução:** `ENABLE_DL_TRANSLATION=false` (por regras) no compose — leve
+  e suficiente para os sinais. O modo neural (`true`) dá glosa melhor, mas falha sob
+  emulação amd64 (Apple Silicon); habilite em host x86_64 se quiser.
+- **arm64/Apple Silicon:** as imagens do VLibras são amd64-only — o compose já força
+  `platform: linux/amd64` (rodam via emulação).

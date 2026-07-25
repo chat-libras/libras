@@ -1,0 +1,104 @@
+# -----------------------------------------------------------------------------
+# Tradutor PT→glosa do VLibras, AUTO-HOSPEDADO.
+#
+# Por quê: o endpoint público `traducao2-dth.vlibras.gov.br/dl/translate` passou
+# a exigir autorização (HTTP 401). Sem glosa, o player do VLibras cai no fallback
+# `play(text.toUpperCase())` e SOLETRA tudo (datilologia) em vez de usar os sinais
+# de palavras. Este stack devolve a tradução PT→glosa localmente.
+#
+# Arquitetura (microserviços oficiais do spbgovbr-vlibras):
+#   API (Node, :3000)  →  RabbitMQ  →  text-core (Python, tradutor neural)
+#   API usa MongoDB (histórico) + Redis (cache de traduções)
+#
+# Contrato HTTP (usado pelo player e pelo proxy do Vite):
+#   POST /translate   body: {"text":"..."}   →   200  corpo = glosa (texto puro)
+#
+# Subir:   docker compose -f docker-compose.translator.yml up -d
+# Testar:  curl -s -XPOST localhost:3000/translate -H 'content-type: application/json' \
+#                 -d '{"text":"eu estou com dor de cabeça"}'   # -> EU DOR CABEÇA
+#
+# Obs.: a 1ª subida baixa imagens grandes (torch CPU + modelos spaCy/NLTK no
+# text-core). O text-core leva ~1–2 min para carregar os modelos; até lá a API
+# pode responder 500 "translator unavailable". Depois disso fica offline-capable.
+# -----------------------------------------------------------------------------
+services:
+  vlibras-translator-api:
+    # Linha 2.x (MongoDB + Redis + RabbitMQ). A 5.x mudou para PostgreSQL e é
+    # instável sem ele (500 intermitente ao gravar stats → avatar volta a soletrar).
+    image: vlibras/translator-api:2.1.4
+    # Imagens do VLibras são amd64-only; em Apple Silicon rodam via emulação.
+    platform: linux/amd64
+    ports:
+      - "3000:3000"
+    environment:
+      # NÃO defina NODE_ENV=dev: nesse modo a imagem carrega um .env.dev interno
+      # que aponta para localhost e ignora as variáveis abaixo.
+      PORT: 3000
+      LOGGER_FORMAT: dev
+      DB_HOST: mongo
+      DB_PORT: 27017
+      DB_NAME: vlibras-db
+      CACHE_HOST: redis
+      CACHE_PORT: 6379
+      CACHE_NAME: vlibras-cache
+      CACHE_SIZE: 104857600      # 100 MB
+      CACHE_EXP: 604800          # 1 semana
+      AMQP_PROTOCOL: amqp
+      AMQP_HOST: rabbitmq
+      AMQP_PORT: 5672
+      AMQP_USER: vlibras
+      AMQP_PASS: vlibras
+      TRANSLATOR_QUEUE: translate.to_text
+      VIDEOMAKER_QUEUE: translate.to_video
+      API_CONSUMER_QUEUE: amq.rabbitmq.reply-to
+    depends_on:
+      - redis
+      - mongo
+      - rabbitmq
+      - vlibras-translator-text-core
+    restart: unless-stopped
+
+  vlibras-translator-text-core:
+    image: vlibras/vlibras-translator-text-core:4.3.0
+    platform: linux/amd64
+    environment:
+      AMQP_HOST: rabbitmq
+      AMQP_PORT: 5672
+      AMQP_USER: vlibras
+      AMQP_PASS: vlibras
+      AMQP_PREFETCH_COUNT: 1
+      TRANSLATOR_QUEUE: translate.to_text
+      ENABLE_DL_TRANSLATION: "false"  # tradutor por regras (leve; DL neural falha sob emulação amd64)
+      ENABLE_REFINEMENT: "false"      # refino via LLM off (exigiria LLM_API_KEY)
+      HEALTHCHECK_PORT: 80
+    depends_on:
+      - rabbitmq
+    restart: unless-stopped
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: vlibras
+      RABBITMQ_DEFAULT_PASS: vlibras
+    ports:
+      - "15672:15672"   # painel de gestão (opcional): http://localhost:15672
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    restart: unless-stopped
+
+  redis:
+    image: redis:alpine
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+
+  mongo:
+    image: mongo:6
+    volumes:
+      - mongo-data:/data/db
+    restart: unless-stopped
+
+volumes:
+  rabbitmq-data:
+  redis-data:
+  mongo-data:
