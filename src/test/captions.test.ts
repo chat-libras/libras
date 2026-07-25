@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { createCaptionSink } from './captions';
+import { createCaptionSink } from '../libras/adapters/captions';
 
 // A fonte de legendas encaminha texto para translate() com deduplicação (a mesma
 // lógica de phrase-source): descarta vazias/curtas e repetidas em <3s.

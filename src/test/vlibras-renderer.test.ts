@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { VLibrasSignRenderer, type VLibrasPlayerLike } from './vlibras-renderer';
+import { VLibrasSignRenderer, type VLibrasPlayerLike } from '../libras/core/vlibras-renderer';
 
 // Player falso: registra as chamadas translate() e permite disparar o evento de
 // "fim" manualmente, simulando o player assíncrono do VLibras.
