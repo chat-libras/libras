@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { newIncomingMessages, resolveLabels, DEFAULT_LABELS } from '../utils/messages';
-import type { LibrasChatMessage, LibrasChatRole } from '../interfaces/LibrasChatProps';
+import { newIncomingMessages, resolveLabels, DEFAULT_LABELS } from '../libras/ui/utils/messages';
+import type { LibrasChatMessage, LibrasChatRole } from '../libras/ui/interfaces/LibrasChatProps';
 
 const msg = (id: string, from: LibrasChatRole, text = 't'): LibrasChatMessage => ({ id, from, text });
 
