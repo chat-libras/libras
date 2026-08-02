@@ -26,9 +26,22 @@ export type WsMessage =
   | { type: 'peer:joined'; peer: { id: PeerId; role?: string } }
   | { type: 'peer:left'; peerId: PeerId }
   | { type: 'media:state'; from: PeerId; cameraOn: boolean; micOn: boolean }
-  | { type: 'debug:event'; category: string; eventType: string; payload: Record<string, unknown> }
+  | { type: 'debug:event'; origin: string; category: string; info: string; details?: Record<string, unknown> | null }
   | { type: 'debug:subscribe' }
   | { type: 'debug:unsubscribe' }
-  | { type: 'debug:broadcast'; event: { id: number; ts: number; roomId: string; peerId: string; role: string; category: string; type: string; payload: Record<string, unknown> } }
-  | { type: 'debug:history'; events: Array<{ id: number; ts: number; roomId: string; peerId: string; role: string; category: string; type: string; payload: Record<string, unknown> }> }
-  | { type: 'debug:clear' };
+  | { type: 'debug:broadcast'; event: DebugEventDto }
+  | { type: 'debug:history'; events: DebugEventDto[] }
+  | { type: 'debug:clear' }
+  | { type: 'reconnect'; roomId: RoomId; peerId: PeerId; role?: string };
+
+export interface DebugEventDto {
+  id: string;
+  ts: number;
+  roomId: string;
+  peerId: string;
+  role: string;
+  origin: string;
+  category: string;
+  info: string;
+  details: Record<string, unknown> | null;
+}

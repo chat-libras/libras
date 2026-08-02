@@ -1,15 +1,27 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, Index } from 'typeorm';
-import { Session } from './Session.ts';
+import {
+  Entity,
+  PrimaryColumn,
+  Column,
+  CreateDateColumn,
+  ManyToOne,
+  JoinColumn,
+  Index,
+} from 'typeorm';
+import { Participant } from './Participant.ts';
 
 @Entity('log_events')
 export class LogEvent {
-  @PrimaryGeneratedColumn()
-  id!: number;
+  @PrimaryColumn('varchar')
+  id!: string;
 
-  @ManyToOne(() => Session, (s) => s.events, { onDelete: 'CASCADE' })
-  session!: Session;
+  /** Participante que gerou o evento */
+  @ManyToOne(() => Participant, (p) => p.logs, { onDelete: 'SET NULL', nullable: true, eager: false })
+  @JoinColumn({ name: 'participantId' })
+  participant!: Participant | null;
 
-  // roomId denormalizado para queries por sala sem join
+  @Column({ type: 'varchar', nullable: true })
+  participantId!: string | null;
+
   @Index()
   @Column({ type: 'varchar' })
   roomId!: string;
@@ -20,14 +32,21 @@ export class LogEvent {
   @Column({ type: 'varchar' })
   role!: string;
 
+  /** client | server */
+  @Column({ type: 'varchar', default: 'client' })
+  origin!: string;
+
+  /** media | socket | debug | log | system | ... */
   @Column({ type: 'varchar' })
   category!: string;
 
+  /** título/chave do evento, ex: audio_sent, camera:on */
   @Column({ type: 'varchar' })
-  eventType!: string;
+  info!: string;
 
-  @Column({ type: 'simple-json' })
-  payload!: Record<string, unknown>;
+  /** conteúdo adicional estruturado */
+  @Column({ type: 'simple-json', nullable: true })
+  details!: Record<string, unknown> | null;
 
   @CreateDateColumn()
   ts!: Date;

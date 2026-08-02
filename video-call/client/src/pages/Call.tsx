@@ -11,6 +11,7 @@ import { ChatPanel } from '../components/ChatPanel/index.ts';
 import { MediaControls } from '../components/MediaControls/index.ts';
 import { DebugPanel } from '../components/DebugPanel/index.ts';
 import { Sidebar, type SidebarItem } from '../components/Sidebar/index.ts';
+import { ToastContainer } from '../components/Toast/index.ts';
 import { debugBus } from '../debug/event-bus.ts';
 import { initDebugEmitter, emitDebugEvent } from '../debug/debug-emitter.ts';
 import { getClientEnv } from '../env.ts';
@@ -204,6 +205,8 @@ export function Call({ params, onLeave }: CallProps) {
         onToggleLibras={toggleLibras}
         onLeave={onLeave}
       />
+
+      <ToastContainer />
     </div>
   );
 }
