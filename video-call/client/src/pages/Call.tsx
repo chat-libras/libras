@@ -6,11 +6,11 @@ import { useLibrasIntegration } from '../hooks/useLibrasIntegration.ts';
 import { useVAD } from '../hooks/useVAD.ts';
 import { useLibrasAvatar } from 'libras-translator';
 import { useCallStore } from '../store/useCallStore.ts';
-import { VideoGrid } from '../components/VideoGrid/VideoGrid.tsx';
-import { ChatPanel } from '../components/ChatPanel/ChatPanel.tsx';
-import { MediaControls } from '../components/MediaControls/MediaControls.tsx';
-import { DebugPanel } from '../components/DebugPanel/DebugPanel.tsx';
-import { Sidebar, type SidebarItem } from '../components/Sidebar/Sidebar.tsx';
+import { VideoGrid } from '../components/VideoGrid/index.ts';
+import { ChatPanel } from '../components/ChatPanel/index.ts';
+import { MediaControls } from '../components/MediaControls/index.ts';
+import { DebugPanel } from '../components/DebugPanel/index.ts';
+import { Sidebar, type SidebarItem } from '../components/Sidebar/index.ts';
 import { debugBus } from '../debug/event-bus.ts';
 import { initDebugEmitter, emitDebugEvent } from '../debug/debug-emitter.ts';
 import { getClientEnv } from '../env.ts';
@@ -57,6 +57,12 @@ export function Call({ params, onLeave }: CallProps) {
   const avatar = useLibrasAvatar({ speed: 1.3 });
   const { debugMode } = getClientEnv();
   const { theme, toggleTheme } = useAppTheme();
+
+  // Habilita o debugBus imediatamente quando debugMode está ativo
+  useEffect(() => {
+    if (debugMode) debugBus.enable();
+    return () => { if (debugMode) debugBus.disable(); };
+  }, [debugMode]);
 
   const [sidebarKey, setSidebarKey] = useState<string | null>(null);
   const toggleSidebar = (key: string) =>

@@ -1,97 +1,10 @@
 import { useState } from 'react';
-import styled, { css } from 'styled-components';
 import type { PeerInfo } from '../../hooks/useWebRTC.ts';
 import { debugBus } from '../../debug/event-bus.ts';
-
-// ── Styled ──────────────────────────────────────────────────────────────────
-
-const Grid = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  padding: 8px;
-  background: ${({ theme }) => theme.bg.primary};
-  border-radius: 8px;
-  min-height: 180px;
-`;
-
-const Spotlight = styled.div`
-  display: flex;
-  gap: 8px;
-  background: ${({ theme }) => theme.bg.primary};
-  border-radius: 8px;
-  overflow: hidden;
-  height: 100%;
-  min-height: 300px;
-`;
-
-const SpotlightMain = styled.div`
-  flex: 1;
-  min-width: 0;
-  .video-tile { width: 100%; height: 100%; border-radius: 6px; }
-`;
-
-const SpotlightSidebar = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 8px 8px 8px 0;
-  width: 160px;
-  overflow-y: auto;
-  .video-tile { width: 100%; height: 110px; flex-shrink: 0; }
-`;
-
-const Tile = styled.div<{ $clickable?: boolean; $pinned?: boolean }>`
-  position: relative;
-  width: 240px;
-  height: 160px;
-  background: ${({ theme }) => theme.bg.tile};
-  border-radius: 6px;
-  overflow: hidden;
-  border: 1px solid ${({ theme }) => theme.border};
-  transition: border-color 0.15s;
-
-  ${({ $clickable }) => $clickable && css`cursor: pointer;`}
-  ${({ $clickable, theme }) => $clickable && css`&:hover { border-color: ${theme.btn.active.bg}; }`}
-  ${({ $pinned, theme }) => $pinned && css`border-color: ${theme.btn.active.bg}; border-width: 2px;`}
-`;
-
-const TileVideo = styled.video`
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-`;
-
-const TilePlaceholder = styled.div`
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: ${({ theme }) => theme.bg.tile};
-
-  .material-icons {
-    font-size: 40px;
-    color: ${({ theme }) => theme.text.muted};
-  }
-`;
-
-const TileLabel = styled.span`
-  position: absolute;
-  bottom: 6px;
-  left: 8px;
-  font-size: 11px;
-  color: #fff;
-  background: rgba(0, 0, 0, 0.6);
-  padding: 2px 6px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-
-  .material-icons { font-size: 12px; vertical-align: middle; margin-right: 4px; }
-`;
-
-// ── Types ────────────────────────────────────────────────────────────────────
+import {
+  Grid, Spotlight, SpotlightMain, SpotlightSidebar,
+  Tile, TileVideo, TilePlaceholder, TileLabel,
+} from './styles.ts';
 
 interface VideoGridProps {
   localStream: MediaStream | null;
@@ -111,16 +24,8 @@ interface TileData {
   isLocal: boolean;
 }
 
-// ── VideoTile ────────────────────────────────────────────────────────────────
-
 function VideoTile({
-  stream,
-  label,
-  muted = false,
-  camOff = false,
-  remote = false,
-  pinned = false,
-  onClick,
+  stream, label, muted = false, camOff = false, remote = false, pinned = false, onClick,
 }: {
   stream: MediaStream | null;
   label: string;
@@ -152,9 +57,7 @@ function VideoTile({
         />
       ) : (
         <TilePlaceholder>
-          <span className="material-icons">
-            {camOff ? 'videocam_off' : 'person'}
-          </span>
+          <span className="material-icons">{camOff ? 'videocam_off' : 'person'}</span>
         </TilePlaceholder>
       )}
       <TileLabel>
@@ -165,17 +68,9 @@ function VideoTile({
   );
 }
 
-// ── VideoGrid ────────────────────────────────────────────────────────────────
-
 export function VideoGrid({
-  localStream,
-  remoteStreams,
-  peers,
-  peerMediaState,
-  myId,
-  cameraOn,
-  audioOn,
-  spotlightMode,
+  localStream, remoteStreams, peers, peerMediaState,
+  myId, cameraOn, audioOn, spotlightMode,
 }: VideoGridProps) {
   const [pinnedId, setPinnedId] = useState<string | null>(null);
 

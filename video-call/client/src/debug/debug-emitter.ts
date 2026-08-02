@@ -1,7 +1,7 @@
-// Envia eventos de debug para o servidor via WebSocket.
-// Só opera quando VITE_DEBUG_MODE=true.
+// Envia eventos de debug para o servidor via WebSocket e injeta no debugBus local.
 
 import { getClientEnv } from '../env.ts';
+import { debugBus, type DebugCategory } from './event-bus.ts';
 
 let _ws: WebSocket | null = null;
 let _peerId = '';
@@ -10,7 +10,7 @@ let _enabled = false;
 let _initialized = false;
 
 export function initDebugEmitter(ws: WebSocket, peerId: string, role: string): void {
-  if (_initialized && _ws === ws) return; // já inicializado para este ws
+  if (_initialized && _ws === ws) return;
   _enabled = getClientEnv().debugMode;
   _ws = ws;
   _peerId = peerId;
@@ -18,30 +18,38 @@ export function initDebugEmitter(ws: WebSocket, peerId: string, role: string): v
   _initialized = true;
 
   if (_enabled) {
-    // WS já está OPEN quando este hook roda (setWs só é chamado no onopen)
+    const subscribe = () => ws.send(JSON.stringify({ type: 'debug:subscribe' }));
     if (ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({ type: 'debug:subscribe' }));
+      subscribe();
     } else {
-      // Fallback: aguarda abertura
-      ws.addEventListener('open', () => {
-        ws.send(JSON.stringify({ type: 'debug:subscribe' }));
-      }, { once: true });
+      ws.addEventListener('open', subscribe, { once: true });
     }
   }
 }
 
 export function emitDebugEvent(
-  category: string,
-  eventType: string,
-  payload: Record<string, unknown> = {},
+  category: DebugCategory | string,
+  info: string,
+  details: Record<string, unknown> = {},
+  origin: 'client' | 'server' = 'client',
 ): void {
+  // Emite localmente no debugBus para exibição imediata no DebugPanel
+  debugBus.emit(
+    category as DebugCategory,
+    info,
+    { _peerId, _role, ...details },
+    { origin, role: _role, details },
+  );
+
+  // Envia para o servidor para persistência e broadcast
   if (!_enabled || !_ws || _ws.readyState !== WebSocket.OPEN) return;
   _ws.send(
     JSON.stringify({
       type: 'debug:event',
+      origin,
       category,
-      eventType,
-      payload: { ...payload, _peerId, _role },
+      info,
+      details: { ...details, peerId: _peerId, role: _role },
     }),
   );
 }

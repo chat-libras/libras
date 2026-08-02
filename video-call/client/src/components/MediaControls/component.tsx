@@ -1,4 +1,4 @@
-import styled, { css } from 'styled-components';
+import { Bar, Btn } from './styles.ts';
 
 interface MediaControlsProps {
   cameraOn: boolean;
@@ -12,41 +12,6 @@ interface MediaControlsProps {
   onToggleLibras: () => void;
   onLeave: () => void;
 }
-
-const Bar = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 16px;
-  padding: 14px 24px;
-  background: ${({ theme }) => theme.bg.secondary};
-  border-top: 1px solid ${({ theme }) => theme.border};
-`;
-
-const Btn = styled.button<{ $variant?: 'on' | 'off' | 'leave' }>`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-  width: 52px;
-  height: 52px;
-  transition: background 0.15s, transform 0.1s;
-  &:hover { transform: scale(1.08); }
-  &:active { transform: scale(0.95); }
-  .material-icons { font-size: 24px; user-select: none; }
-  ${({ $variant, theme }) => {
-    switch ($variant) {
-      case 'on':
-        return css`background:${theme.btn.active.bg};color:${theme.btn.active.text};&:hover{background:${theme.btn.active.hover};}`;
-      case 'leave':
-        return css`background:${theme.btn.danger.bg};color:${theme.btn.danger.text};width:60px;height:60px;.material-icons{font-size:28px;}&:hover{background:${theme.btn.danger.hover};}`;
-      default:
-        return css`background:${theme.btn.inactive.bg};color:${theme.btn.inactive.text};&:hover{background:${theme.btn.inactive.hover};}`;
-    }
-  }}
-`;
 
 export function MediaControls({
   cameraOn, micOn, audioOn, librasOn, showLibrasToggle,
