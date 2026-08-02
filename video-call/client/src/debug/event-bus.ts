@@ -48,6 +48,12 @@ export const debugBus = {
     listeners.forEach((l) => l(event));
   },
 
+  /** Injeta evento já formado (vindo do servidor) preservando o id original */
+  inject(event: DebugEvent): void {
+    if (!enabled) return;
+    listeners.forEach((l) => l(event));
+  },
+
   subscribe(listener: Listener): () => void {
     listeners.add(listener);
     return () => listeners.delete(listener);

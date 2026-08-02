@@ -25,7 +25,7 @@ export type WsMessage =
   | { type: 'peers:list'; peers: Array<{ id: PeerId; role?: string }> }
   | { type: 'peer:joined'; peer: { id: PeerId; role?: string } }
   | { type: 'peer:left'; peerId: PeerId }
-  | { type: 'media:state'; from: PeerId; cameraOn: boolean; micOn: boolean }
+  | { type: 'media:state'; from?: PeerId; to?: PeerId; cameraOn: boolean; micOn: boolean }
   | { type: 'debug:event'; origin: string; category: string; info: string; details?: Record<string, unknown> | null }
   | { type: 'debug:subscribe' }
   | { type: 'debug:unsubscribe' }

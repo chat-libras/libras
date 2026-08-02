@@ -95,7 +95,7 @@ export const useCallStore = create<CallState>()(
     // Mídia local
     cameraOn: false,
     micOn: false,
-    audioOn: false,
+    audioOn: true,  // ouvir peers começa habilitado
     librasOn: false,
 
     // Refs internas
@@ -202,7 +202,7 @@ export function initCallStore(params: { peerId: string; roomId: string; role: st
     remoteStreams: new Map(),
     cameraOn: false,
     micOn: false,
-    audioOn: false,
+    audioOn: true,
     librasOn: false,
     connected: false,
     error: null,

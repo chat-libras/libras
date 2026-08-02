@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import type { PeerInfo } from '../../hooks/useWebRTC.ts';
 import { debugBus } from '../../debug/event-bus.ts';
 import {
@@ -35,9 +35,16 @@ function VideoTile({
   pinned?: boolean;
   onClick?: () => void;
 }) {
-  const attachStream = (el: HTMLVideoElement | null) => {
-    if (el && stream) el.srcObject = stream;
-  };
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  useEffect(() => {
+    const el = videoRef.current;
+    if (!el) return;
+    el.srcObject = stream ?? null;
+  }, [stream]);
+
+  // Mostra vídeo se: stream existe. camOff só controla o ícone do placeholder.
+  const showVideo = !!stream;
 
   return (
     <Tile
@@ -47,15 +54,16 @@ function VideoTile({
       onClick={onClick}
       title={onClick ? (pinned ? 'Clique para desafixar' : 'Clique para fixar') : undefined}
     >
-      {stream && !camOff ? (
-        <TileVideo
-          ref={attachStream}
-          autoPlay
-          playsInline
-          muted={muted}
-          {...(remote ? { 'data-remote': 'true' } : {})}
-        />
-      ) : (
+      {/* Vídeo sempre montado quando stream existe — camOff só esconde visualmente */}
+      <TileVideo
+        ref={videoRef}
+        autoPlay
+        playsInline
+        muted={muted}
+        style={{ display: showVideo && !camOff ? 'block' : 'none' }}
+        {...(remote ? { 'data-remote': 'true' } : {})}
+      />
+      {(!showVideo || camOff) && (
         <TilePlaceholder>
           <span className="material-icons">{camOff ? 'videocam_off' : 'person'}</span>
         </TilePlaceholder>

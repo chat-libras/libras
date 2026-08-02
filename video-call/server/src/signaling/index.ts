@@ -37,6 +37,11 @@ function addDebugSubscriber(roomId: string, ws: WebSocket): void {
   getRoomSubs(roomId).add(ws);
 }
 
+/** Retorna true se o WS já era subscriber desta sala antes de ser adicionado */
+function addedAsSubscriber(roomId: string, ws: WebSocket): boolean {
+  return getRoomSubs(roomId).has(ws);
+}
+
 function removeDebugSubscriber(ws: WebSocket): void {
   for (const subs of roomDebugSubscribers.values()) subs.delete(ws);
 }
@@ -109,20 +114,19 @@ export function handleWsConnection(ws: WebSocket): void {
     const session = await getOrCreateSession(room.id);
     await joinParticipant({ id: peer.id, roomId: room.id, role: peer.role ?? 'unknown', sessionId: session.id });
 
-    // Registra evento de reconnect no banco para auditoria
-    if (isReconnect) {
-      await broadcastDebugEvent({
-        roomId: room.id,
-        peerId: peer.id,
-        role: peer.role ?? 'unknown',
-        origin: 'client',
-        category: 'socket',
-        info: 'peer:reconnected',
-        details: { peerId: peer.id, role: peer.role },
-      });
-    }
+    // Persiste evento de conexão/reconexão para todos os subscribers da sala
+    await broadcastDebugEvent({
+      roomId: room.id,
+      peerId: peer.id,
+      role: peer.role ?? 'unknown',
+      origin: 'server',
+      category: 'system',
+      info: isReconnect ? 'peer:reconnected' : 'peer:connected',
+      details: { peerId: peer.id, role: peer.role ?? 'unknown' },
+    });
 
-    if (pendingSubscribe) {
+    // Sempre envia histórico completo ao entrar/reconectar (pendente ou subscriber já registrado)
+    if (pendingSubscribe || addedAsSubscriber(room.id, ws)) {
       pendingSubscribe = false;
       addDebugSubscriber(room.id, ws);
       await sendHistory(ws, room.id);
@@ -165,12 +169,14 @@ export function handleWsConnection(ws: WebSocket): void {
 
       case 'media:state': {
         if (!currentRoom || !peer) return;
-        broadcast(currentRoom, {
-          type: 'media:state',
-          from: peer.id,
-          cameraOn: msg.cameraOn,
-          micOn: msg.micOn,
-        }, peer.id);
+        if (msg.to) {
+          const target = currentRoom.peers.get(msg.to);
+          if (target?.ws.readyState === WebSocket.OPEN) {
+            target.ws.send(JSON.stringify({ type: 'media:state' as const, from: peer.id, cameraOn: msg.cameraOn, micOn: msg.micOn }));
+          }
+        } else {
+          broadcast(currentRoom, { type: 'media:state', from: peer.id, cameraOn: msg.cameraOn, micOn: msg.micOn }, peer.id);
+        }
         break;
       }
 
@@ -231,6 +237,17 @@ export function handleWsConnection(ws: WebSocket): void {
     broadcast(room, { type: 'peer:left', peerId: leavingPeer.id }, leavingPeer.id);
     await setParticipantStatus(leavingPeer.id, 'left');
     console.log(`[signaling] ${leavingPeer.id} saiu de "${room.id}"`);
+
+    // Persiste evento de saída para auditoria
+    await broadcastDebugEvent({
+      roomId: room.id,
+      peerId: leavingPeer.id,
+      role: leavingPeer.role ?? 'unknown',
+      origin: 'server',
+      category: 'system',
+      info: 'peer:left',
+      details: { peerId: leavingPeer.id, role: leavingPeer.role ?? 'unknown' },
+    });
 
     // Fecha a sessão da sala quando ela esvazia
     if (room.peers.size === 0) {

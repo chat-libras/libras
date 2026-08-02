@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, Fragment } from 'react';
 import { useDebugEvents } from '../../debug/useDebugEvents.ts';
 import { type DebugCategory } from '../../debug/event-bus.ts';
 import {
@@ -80,8 +80,8 @@ export function DebugPanel() {
         {events.map((e) => {
           const details = formatDetails(e.details);
           return (
-            <>
-              <EventRow key={e.id}>
+            <Fragment key={e.id}>
+              <EventRow>
                 <ColOrigin>{e.origin}</ColOrigin>
                 <ColRole $color={roleColor(e.role)}>{e.role || '—'}</ColRole>
                 <ColCategory $color={categoryColor(e.category)}>[{e.category}]</ColCategory>
@@ -89,9 +89,9 @@ export function DebugPanel() {
                 <ColTs>{new Date(e.ts).toLocaleTimeString()}</ColTs>
               </EventRow>
               {details && (
-                <DetailsRow key={`${e.id}-details`}>{details}</DetailsRow>
+                <DetailsRow>{details}</DetailsRow>
               )}
-            </>
+            </Fragment>
           );
         })}
       </List>

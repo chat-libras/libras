@@ -12,7 +12,7 @@ import {
   getParticipant,
   getParticipantsByRoom,
 } from './db/participant-service.ts';
-import { getOrCreateSession } from './db/log-service.ts';
+import { getOrCreateSession, getLogEvents } from './db/log-service.ts';
 
 const env = getServerEnv();
 const app = express();
@@ -69,6 +69,15 @@ app.get('/participants/:id', async (req, res) => {
 // ── Health ───────────────────────────────────────────────────────────────────
 
 app.get('/health', (_req, res) => res.json({ ok: true, ts: Date.now() }));
+
+// ── Logs ─────────────────────────────────────────────────────────────────────
+
+app.get('/rooms/:roomId/logs', async (req, res) => {
+  const { roomId } = req.params as { roomId: string };
+  const since = req.query['since'] ? Number(req.query['since']) : undefined;
+  const logs = await getLogEvents(roomId, since);
+  res.json(logs);
+});
 
 // ── Bootstrap ────────────────────────────────────────────────────────────────
 

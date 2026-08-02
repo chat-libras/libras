@@ -1,6 +1,11 @@
 /**
  * useWebRTC — configura WS + RTCPeerConnections e alimenta o useCallStore.
  * O estado em si vive no store; este hook só gerencia efeitos colaterais.
+ *
+ * Fluxo de negociação:
+ *  - Quem entra na sala (recebe peers:list) é sempre o INITIATOR — manda offer para cada existente.
+ *  - Quem já está na sala (recebe peer:joined) cria a PC e aguarda o offer do novo peer.
+ *  - Isso elimina SDP glare e garante que o WS está aberto quando o offer é enviado.
  */
 import { useEffect, useRef, useCallback } from 'react';
 import { getClientEnv } from '../env.ts';
@@ -22,9 +27,13 @@ const ICE_SERVERS: RTCIceServer[] = [
 export function useWebRTC(params: CallParams) {
   const { serverUrl } = getClientEnv();
 
-  const wsRef = useRef<WebSocket | null>(null);
-  const pcsRef = useRef(new Map<string, RTCPeerConnection>());
+  const wsRef       = useRef<WebSocket | null>(null);
+  const pcsRef      = useRef(new Map<string, RTCPeerConnection>());
   const localStreamRef = useRef<MediaStream | null>(null);
+  const disposedRef = useRef(false);
+  const isReconnectRef = useRef(false);
+  // IDs recebidos via peers:list — suprime toast de peer:joined para esses peers
+  const initialPeersRef = useRef(new Set<string>());
 
   const store = useCallStore();
 
@@ -39,63 +48,104 @@ export function useWebRTC(params: CallParams) {
     const socket = wsRef.current;
     if (socket?.readyState === WebSocket.OPEN) {
       socket.send(JSON.stringify(msg));
-      debugBus.emit('socket', (msg as { type: string }).type, msg as Record<string, unknown>);
     }
   }, []);
 
-  const createPeerConnection = useCallback(
-    (peerId: string): RTCPeerConnection => {
-      const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
-      pcsRef.current.set(peerId, pc);
+  // ── PeerConnection factory ────────────────────────────────────────────────
 
-      localStreamRef.current?.getTracks().forEach((t) => {
-        pc.addTransceiver(t, { direction: 'sendrecv', streams: [localStreamRef.current!] });
-      });
+  const createPC = useCallback((peerId: string): RTCPeerConnection => {
+    pcsRef.current.get(peerId)?.close();
 
-      pc.ontrack = (event) => {
-        const [stream] = event.streams;
-        useCallStore.getState().setRemoteStream(peerId, stream);
-      };
+    const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+    pcsRef.current.set(peerId, pc);
 
-      pc.onicecandidate = (event) => {
-        if (event.candidate) {
-          sendWs({ type: 'ice-candidate', to: peerId, from: params.peerId, candidate: event.candidate.toJSON() });
+    const stream = localStreamRef.current;
+    const tracks = stream?.getTracks() ?? [];
+    console.log(`[webrtc] createPC ${peerId} | tracks: ${tracks.length}`);
+    if (stream) tracks.forEach((t) => pc.addTrack(t, stream));
+
+    pc.ontrack = (ev) => {
+      const [s] = ev.streams;
+      console.log(`[webrtc] ontrack ← ${peerId} | kind: ${ev.track.kind} streams: ${ev.streams.length}`);
+      if (s) {
+        const store = useCallStore.getState();
+        store.setRemoteStream(peerId, s);
+        const current = store.peerMediaState.get(peerId);
+        if (!current?.cameraOn) {
+          store.setPeerMediaState(peerId, { cameraOn: true, micOn: current?.micOn ?? true });
         }
-      };
+      }
+    };
 
-      pc.onconnectionstatechange = () => {
-        const state = pc.connectionState;
-        debugBus.emit('socket', 'rtc:connection-state', { peerId, state });
-        if (state === 'disconnected' || state === 'failed' || state === 'closed') {
-          pcsRef.current.delete(peerId);
-          useCallStore.getState().removePeer(peerId);
-        }
-      };
+    pc.onicecandidate = (ev) => {
+      if (ev.candidate) {
+        sendWs({ type: 'ice-candidate', to: peerId, from: params.peerId, candidate: ev.candidate.toJSON() });
+      }
+    };
 
-      return pc;
-    },
-    [params.peerId, sendWs],
-  );
+    pc.onconnectionstatechange = () => {
+      const state = pc.connectionState;
+      debugBus.emit('socket', 'rtc:connection-state', { peerId, state });
+      if (state === 'failed' || state === 'closed') {
+        pcsRef.current.delete(peerId);
+      }
+    };
 
-  // Injeta evento recebido do servidor no debugBus local
+    return pc;
+  }, [params.peerId, sendWs]);
+
+  // Cria offer e envia — usado por quem entra na sala
+  const startOffer = useCallback(async (peerId: string) => {
+    const pc = createPC(peerId);
+    const trackCount = localStreamRef.current?.getTracks().length ?? 0;
+    console.log(`[webrtc] startOffer → ${peerId} | tracks: ${trackCount}`);
+    try {
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      console.log(`[webrtc] offer criado para ${peerId}`);
+      sendWs({ type: 'offer', to: peerId, from: params.peerId, sdp: pc.localDescription! });
+    } catch (e) {
+      console.error(`[webrtc] offer-error ${peerId}:`, e);
+      debugBus.emit('system', 'rtc:offer-error', { peerId, error: String(e) });
+    }
+  }, [createPC, params.peerId, sendWs]);
+
+  // ── Debug inject ─────────────────────────────────────────────────────────
+
   const injectDebugRef = useRef((evt: DebugEventDto) => {
-    debugBus.emit(
-      evt.category as Parameters<typeof debugBus.emit>[0],
-      evt.info,
-      { peerId: evt.peerId, _role: evt.role, ...(evt.details ?? {}) },
-      { origin: evt.origin as 'client' | 'server', role: evt.role, details: evt.details ?? undefined },
-    );
+    debugBus.inject({
+      id: evt.id,
+      origin: evt.origin as 'client' | 'server',
+      role: evt.role,
+      category: (evt.category as Parameters<typeof debugBus.emit>[0]) ?? 'system',
+      info: evt.info,
+      type: evt.info,
+      payload: { peerId: evt.peerId, _role: evt.role, ...(evt.details ?? {}) },
+      details: evt.details,
+      ts: evt.ts,
+    });
   });
 
-  const isReconnectRef = useRef(false);
-  const disposedRef = useRef(false);
+  // Fetch logs da sala via REST e injeta no debugBus (dedup por id)
+  const fetchRoomLogs = useCallback(async (roomId: string) => {
+    try {
+      const apiBase = serverUrl.replace(/^ws/, 'http');
+      const res = await fetch(`${apiBase}/rooms/${roomId}/logs`);
+      if (!res.ok) return;
+      const logs = await res.json() as DebugEventDto[];
+      logs.forEach((e) => injectDebugRef.current(e));
+    } catch { /* best-effort */ }
+  }, [serverUrl]);
+
+  // ── WebSocket ─────────────────────────────────────────────────────────────
 
   const connectWs = useCallback(async () => {
     if (disposedRef.current) return;
 
-    // fecha PCs antigos na reconexão
+    // Fecha PCs e WS anteriores
     pcsRef.current.forEach((pc) => pc.close());
     pcsRef.current.clear();
+    wsRef.current?.close();
 
     const socket = new WebSocket(serverUrl);
     wsRef.current = socket;
@@ -106,18 +156,17 @@ export function useWebRTC(params: CallParams) {
       useCallStore.getState().setWs(socket);
 
       const msgType = isReconnectRef.current ? 'reconnect' : 'join';
-      sendWs({ type: msgType, roomId: params.roomId, peerId: params.peerId, role: params.role });
-      sendWs({ type: 'media:state', from: params.peerId, cameraOn: false, micOn: false });
-      if (getClientEnv().debugMode) sendWs({ type: 'debug:subscribe' });
+      socket.send(JSON.stringify({ type: msgType, roomId: params.roomId, peerId: params.peerId, role: params.role }));
+      socket.send(JSON.stringify({ type: 'media:state', from: params.peerId, cameraOn: false, micOn: false }));
+      if (getClientEnv().debugMode) socket.send(JSON.stringify({ type: 'debug:subscribe' }));
 
       if (isReconnectRef.current) {
         toast.success('🔄 Reconectado ao servidor');
         debugBus.emit('socket', 'peer:reconnected', { roomId: params.roomId }, { origin: 'client', role: params.role });
       } else {
-        // sem toast — o usuário sabe que entrou, não precisa ser informado
         debugBus.emit('socket', 'ws:connected', { roomId: params.roomId });
       }
-      isReconnectRef.current = true; // toda conexão futura é reconexão
+      isReconnectRef.current = true;
     };
 
     socket.onerror = () => useCallStore.getState().setError('Erro ao conectar ao servidor WS');
@@ -131,42 +180,53 @@ export function useWebRTC(params: CallParams) {
     };
 
     socket.onmessage = async (event) => {
+      if (disposedRef.current) return;
       const msg = JSON.parse(event.data as string) as { type: string } & Record<string, unknown>;
-      debugBus.emit('socket', msg.type, msg);
       const s = useCallStore.getState();
 
       switch (msg.type) {
+
+        // ── Entrei na sala — lista de peers existentes ──────────────────
         case 'peers:list': {
           const peerList = msg['peers'] as PeerInfo[];
           s.setPeers(peerList);
           s.initPeerMediaStates(peerList);
+          initialPeersRef.current = new Set(peerList.map((p) => p.id));
+          setTimeout(() => initialPeersRef.current.clear(), 3000);
+          if (peerList.length > 0) toast.info(`👥 ${peerList.length} participante(s) já na sala`);
           debugBus.emit('media', 'room:joined', { existingPeers: peerList.length });
-          if (peerList.length > 0) {
-            toast.info(`👥 ${peerList.length} participante(s) já na sala`);
-          }
+
+          // Quem entra é o initiator — manda offer para cada peer existente
           for (const peer of peerList) {
-            const pc = createPeerConnection(peer.id);
-            const offer = await pc.createOffer();
-            await pc.setLocalDescription(offer);
-            sendWs({ type: 'offer', to: peer.id, from: params.peerId, sdp: offer });
+            await startOffer(peer.id);
           }
+
+          // Carrega histórico de logs
+          void fetchRoomLogs(params.roomId);
           break;
         }
-        case 'media:state': {
-          const { from, cameraOn: cam, micOn: mic } = msg as unknown as { from: string; cameraOn: boolean; micOn: boolean };
-          s.setPeerMediaState(from, { cameraOn: cam, micOn: mic });
-          debugBus.emit('media', 'peer:media-state', { from, cameraOn: cam, micOn: mic });
-          break;
-        }
+
+        // ── Novo peer entrou — aguardo o offer dele ─────────────────────
         case 'peer:joined': {
           const peer = msg['peer'] as PeerInfo;
           s.addPeer(peer);
           s.setPeerMediaState(peer.id, { cameraOn: false, micOn: false });
           debugBus.emit('media', 'peer:joined', { peerId: peer.id, role: peer.role ?? 'unknown' });
-          toast.info(`${roleLabel(peer.role)} entrou na chamada`);
-          createPeerConnection(peer.id);
+          if (!initialPeersRef.current.has(peer.id)) toast.info(`${roleLabel(peer.role)} entrou na chamada`);
+
+          // Cria PC para receber o offer que o novo peer vai mandar
+          createPC(peer.id);
+
+          // Envia meu estado de mídia atual para o novo peer
+          const ls = localStreamRef.current;
+          sendWs({
+            type: 'media:state', to: peer.id,
+            cameraOn: ls?.getVideoTracks().some((t) => t.enabled) ?? false,
+            micOn:    ls?.getAudioTracks().some((t) => t.enabled) ?? false,
+          });
           break;
         }
+
         case 'peer:left': {
           const peerId = msg['peerId'] as string;
           const leaving = s.peers.find((p) => p.id === peerId);
@@ -177,44 +237,63 @@ export function useWebRTC(params: CallParams) {
           toast.warning(`${roleLabel(leaving?.role)} saiu da chamada`);
           break;
         }
+
+        case 'media:state': {
+          const { from, cameraOn: cam, micOn: mic } = msg as unknown as { from: string; cameraOn: boolean; micOn: boolean };
+          s.setPeerMediaState(from, { cameraOn: cam, micOn: mic });
+          break;
+        }
+
+        // ── Offer recebido — sou o respondente ─────────────────────────
         case 'offer': {
           const from = msg['from'] as string;
-          const pc = pcsRef.current.get(from) ?? createPeerConnection(from);
+          // Pega ou cria PC (pode já existir do peer:joined)
+          let pc = pcsRef.current.get(from);
+          if (!pc) pc = createPC(from);
           await pc.setRemoteDescription(msg['sdp'] as RTCSessionDescriptionInit);
           const answer = await pc.createAnswer();
           await pc.setLocalDescription(answer);
           sendWs({ type: 'answer', to: from, from: params.peerId, sdp: answer });
           break;
         }
+
         case 'answer': {
           const pc = pcsRef.current.get(msg['from'] as string);
           if (pc) await pc.setRemoteDescription(msg['sdp'] as RTCSessionDescriptionInit);
           break;
         }
+
         case 'ice-candidate': {
           const pc = pcsRef.current.get(msg['from'] as string);
           if (pc) await pc.addIceCandidate(msg['candidate'] as RTCIceCandidateInit);
           break;
         }
+
         case 'debug:broadcast': {
-          const evt = msg['event'] as DebugEventDto;
-          injectDebugRef.current(evt);
+          injectDebugRef.current(msg['event'] as DebugEventDto);
           break;
         }
         case 'debug:history': {
-          const evts = msg['events'] as DebugEventDto[];
-          evts.forEach((e) => injectDebugRef.current(e));
+          (msg['events'] as DebugEventDto[]).forEach((e) => injectDebugRef.current(e));
           break;
         }
       }
     };
-  }, [serverUrl, params, sendWs, createPeerConnection]);
+  }, [serverUrl, params, sendWs, createPC, startOffer, fetchRoomLogs]);
+
+  // ── Lifecycle ──────────────────────────────────────────────────────────────
 
   useEffect(() => {
     disposedRef.current = false;
     isReconnectRef.current = false;
 
     async function init() {
+      // Garante stream fresco (StrictMode pode ter parado o anterior no cleanup)
+      if (localStreamRef.current) {
+        localStreamRef.current.getTracks().forEach((t) => t.stop());
+        localStreamRef.current = null;
+      }
+
       let stream: MediaStream;
       try {
         stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
@@ -224,6 +303,7 @@ export function useWebRTC(params: CallParams) {
       }
       if (disposedRef.current) { stream.getTracks().forEach((t) => t.stop()); return; }
 
+      // Inicia com câmera e mic desligados
       stream.getVideoTracks().forEach((t) => { t.enabled = false; });
       stream.getAudioTracks().forEach((t) => { t.enabled = false; });
       localStreamRef.current = stream;
@@ -234,24 +314,17 @@ export function useWebRTC(params: CallParams) {
 
     init().catch((e) => useCallStore.getState().setError(String(e)));
 
-    // ── Política de reconexão por foco / visibilidade ─────────────────────
-    // Quando o usuário volta à aba e o WS está fechado, tenta reconectar.
+    // Política de reconexão por foco / visibilidade
     const tryReconnect = () => {
       const ws = wsRef.current;
-      if (
-        !disposedRef.current &&
-        (!ws || ws.readyState === WebSocket.CLOSED || ws.readyState === WebSocket.CLOSING)
-      ) {
-        console.log('[ws] reconectando por foco na aba…');
+      if (!disposedRef.current && (!ws || ws.readyState === WebSocket.CLOSED || ws.readyState === WebSocket.CLOSING)) {
         connectWs().catch(console.error);
       }
     };
 
     const onVisibility = () => { if (document.visibilityState === 'visible') tryReconnect(); };
-    const onFocus = () => tryReconnect();
-
     document.addEventListener('visibilitychange', onVisibility);
-    window.addEventListener('focus', onFocus);
+    window.addEventListener('focus', tryReconnect);
 
     return () => {
       disposedRef.current = true;
@@ -259,20 +332,17 @@ export function useWebRTC(params: CallParams) {
       pcsRef.current.forEach((pc) => pc.close());
       pcsRef.current.clear();
       localStreamRef.current?.getTracks().forEach((t) => t.stop());
+      localStreamRef.current = null;
       document.removeEventListener('visibilitychange', onVisibility);
-      window.removeEventListener('focus', onFocus);
+      window.removeEventListener('focus', tryReconnect);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Retorna apenas o que é necessário externamente (ws para o useChat)
   return { ws: store.ws };
 }
 
 function roleLabel(role?: string): string {
-  const labels: Record<string, string> = {
-    patient:      '👤 Paciente',
-    professional: '🩺 Profissional',
-  };
+  const labels: Record<string, string> = { patient: '👤 Paciente', professional: '🩺 Profissional' };
   return role ? (labels[role] ?? role) : 'Participante';
 }
