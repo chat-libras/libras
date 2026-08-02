@@ -1,0 +1,66 @@
+.media-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 14px 24px;
+  background: #0f172a;
+  border-top: 1px solid #1e293b;
+}
+
+.media-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.media-btn:hover { transform: scale(1.08); }
+.media-btn:active { transform: scale(0.95); }
+
+/* Ativo: azul sutil */
+.media-btn--on {
+  background: #1e40af;
+  color: #bfdbfe;
+}
+.media-btn--on:hover { background: #1d4ed8; }
+
+/* Desativado: cinza escuro com ícone apagado */
+.media-btn--off {
+  background: #1e293b;
+  color: #475569;
+}
+.media-btn--off:hover { background: #334155; }
+
+/* Sair: sempre vermelho */
+.media-btn--leave {
+  background: #dc2626;
+  color: #fff;
+  width: 60px;
+  height: 60px;
+}
+.media-btn--leave:hover { background: #b91c1c; }
+
+/* Debug: cinza neutro / azul quando aberto */
+.media-btn--debug {
+  background: #1e293b;
+  color: #94a3b8;
+}
+.media-btn--debug:hover { background: #334155; }
+
+.media-btn--debug-on {
+  background: #0f766e;
+  color: #99f6e4;
+}
+.media-btn--debug-on:hover { background: #0d9488; }
+
+.media-btn .material-icons {
+  font-size: 24px;
+  user-select: none;
+}
+.media-btn--leave .material-icons { font-size: 28px; }
