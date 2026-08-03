@@ -42,8 +42,8 @@ export interface UseLibrasTranslatorOptions {
 }
 
 export interface LibrasTranslatorApi {
-  /** Anexe a um <div> onde o avatar será renderizado. */
-  containerRef: React.RefObject<HTMLDivElement>;
+  /** Anexe a um <div> onde o avatar será renderizado (callback ref). */
+  containerRef: React.RefCallback<HTMLDivElement>;
   status: LibrasStatus;
   error: string | null;
   /** Transcrição parcial ao vivo. */

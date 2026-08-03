@@ -17,7 +17,7 @@ import type { SignRenderer } from './sign-renderer';
 
 /** Contrato mínimo do player do VLibras que precisamos (DIP). */
 export interface VLibrasPlayerLike {
-  /** Sinaliza um texto/glosa. */
+  /** Sinaliza um texto/glosa via tradução interna (PT → glosa → animação). */
   translate(text: string): void;
   /** Assina um evento (ex.: fim da animação). */
   on(event: string, handler: () => void): void;
@@ -25,6 +25,8 @@ export interface VLibrasPlayerLike {
   setSpeed?(speed: number): void;
   /** Opcional: interromper a sinalização atual. */
   stop?(): void;
+  /** Opcional: sinalizar uma glosa diretamente (sem round-trip ao traducao2). */
+  play?(glosa: string): void;
 }
 
 export interface VLibrasRendererOptions {

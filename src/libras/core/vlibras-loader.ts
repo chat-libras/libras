@@ -89,6 +89,12 @@ async function ensureBundle(bundleUrl: string): Promise<VLibrasGlobal> {
 let playerPromise: Promise<VLibrasPlayerFull> | null = null;
 let loadedContainer: HTMLElement | null = null;
 
+/** Reseta o singleton — use apenas quando o avatar for completamente desmontado. */
+export function resetVLibrasPlayer(): void {
+  playerPromise = null;
+  loadedContainer = null;
+}
+
 export async function createVLibrasPlayer(
   container: HTMLElement,
   opts: VLibrasLoaderOptions = {}

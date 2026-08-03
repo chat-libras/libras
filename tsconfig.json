@@ -17,7 +17,9 @@
     "resolveJsonModule": true,
     "allowImportingTsExtensions": false,
     "noEmit": true,
-    "types": ["vite/client"]
+    "declaration": true,
+    "declarationDir": "dist",
+    "types": ["vite/client", "vitest/globals"]
   },
   "include": ["src"]
 }

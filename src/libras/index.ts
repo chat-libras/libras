@@ -53,3 +53,7 @@ export type {
 export { createVLibrasPlayer } from "./core/vlibras-loader";
 export type { VLibrasLoaderOptions } from "./core/vlibras-loader";
 export type { SignRenderer } from "./core/sign-renderer";
+export { LibrasObserver } from "./core/libras-observer";
+export type { LibrasObserverOptions } from "./core/libras-observer";
+export { getLibrasEnv } from "./core/env";
+export type { LibrasEnv } from "./core/env";
