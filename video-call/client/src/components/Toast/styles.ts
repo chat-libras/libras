@@ -1,5 +1,5 @@
 import styled, { css, keyframes } from 'styled-components';
-import type { ToastVariant } from '../../store/useToastStore.ts';
+import type { ToastVariant } from '../../store/useToastStore/index.ts';
 
 const slideIn = keyframes`
   from { transform: translateX(110%); opacity: 0; }

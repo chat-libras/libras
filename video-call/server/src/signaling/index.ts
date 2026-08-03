@@ -2,8 +2,11 @@ import { WebSocket } from 'ws';
 import { randomUUID } from 'crypto';
 import { getOrCreateRoom, addPeer, removePeer, getPeers } from '../rooms.ts';
 import { broadcastChatMessage } from '../chat/index.ts';
-import { saveLogEvent, getLogEvents, getOrCreateSession, closeRoomSession } from '../db/log-service.ts';
-import { joinParticipant, setParticipantStatus } from '../db/participant-service.ts';
+import { saveLogEvent, getLogEvents } from '../db/log-service.ts';
+import { joinParticipant, setParticipantStatus } from '../modules/participant/participant.service.ts';
+import { recordParticipantEvent } from '../modules/participant-event/participant-event.service.ts';
+import { closeRoom, getOrCreateRoom as getOrCreateDbRoom, setStartedByIfEmpty } from '../modules/room/room.service.ts';
+import type { ParticipantRole } from '../modules/participant/participant.entity.ts';
 import type { WsMessage, Peer, Room } from '../types.ts';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -21,6 +24,14 @@ function broadcast(room: Room, msg: WsMessage, excludePeerId?: string): void {
 function relay(room: Room, msg: WsMessage & { to: string }): void {
   const target = room.peers.get(msg.to);
   if (target) send(target.ws, msg);
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+const VALID_ROLES: ParticipantRole[] = ['PATIENT', 'HEALTH_PROFESSIONAL'];
+function toParticipantRole(role: string | undefined): ParticipantRole {
+  if (role && (VALID_ROLES as string[]).includes(role)) return role as ParticipantRole;
+  return 'PATIENT';
 }
 
 // ── Debug subscribers por sala ───────────────────────────────────────────────
@@ -57,9 +68,9 @@ async function broadcastDebugEvent(opts: {
     event: {
       id: event.id,
       ts: event.ts.getTime(),
-      roomId: event.roomId,
-      peerId: event.peerId,
-      role: event.role,
+      roomId: opts.roomId,
+      peerId: opts.peerId,
+      role: opts.role,
       origin: event.origin,
       category: event.category,
       info: event.info,
@@ -78,9 +89,9 @@ async function sendHistory(ws: WebSocket, roomId: string): Promise<void> {
     events: events.map((e) => ({
       id: e.id,
       ts: e.ts.getTime(),
-      roomId: e.roomId,
-      peerId: e.peerId,
-      role: e.role,
+      roomId,
+      peerId: (e.details as Record<string, unknown> | null)?.['peerId'] as string ?? e.participantId ?? '',
+      role: (e.details as Record<string, unknown> | null)?.['role'] as string ?? 'unknown',
       origin: e.origin,
       category: e.category,
       info: e.info,
@@ -111,10 +122,25 @@ export function handleWsConnection(ws: WebSocket): void {
     broadcast(room, { type: 'peer:joined', peer: { id: peer.id, role: peer.role } }, peer.id);
     console.log(`[signaling] ${peer.id} (${peer.role ?? 'anon'}) ${isReconnect ? 'reconectou em' : 'entrou em'} "${room.id}" — ${room.peers.size} peer(s)`);
 
-    const session = await getOrCreateSession(room.id);
-    await joinParticipant({ id: peer.id, roomId: room.id, role: peer.role ?? 'unknown', sessionId: session.id });
+    // Garante que a sala existe no banco, cria com mesmo id se necessário
+    const dbRoom = await getOrCreateDbRoom(roomId);
 
-    // Persiste evento de conexão/reconexão para todos os subscribers da sala
+    await joinParticipant({
+      id: peer.id,
+      roomId: dbRoom.id,
+      role: toParticipantRole(peer.role),
+    });
+
+    await recordParticipantEvent({
+      participantId: peer.id,
+      roomId: dbRoom.id,
+      type: isReconnect ? 'RECONNECTED' : 'CONNECTED',
+    });
+
+    // Marca o primeiro participante como quem iniciou a sala
+    if (!isReconnect) await setStartedByIfEmpty(dbRoom.id, peer.id);
+
+    // Persiste evento de debug
     await broadcastDebugEvent({
       roomId: room.id,
       peerId: peer.id,
@@ -216,7 +242,7 @@ export function handleWsConnection(ws: WebSocket): void {
       }
 
       case 'leave': {
-        await handleLeave();
+        await handleLeave('LEFT');
         break;
       }
     }
@@ -224,35 +250,35 @@ export function handleWsConnection(ws: WebSocket): void {
 
   ws.on('close', () => {
     removeDebugSubscriber(ws);
-    void handleLeave();
+    void handleLeave('DISCONNECTED');
   });
   ws.on('error', (err) => console.error('[ws] erro:', err.message));
 
-  async function handleLeave(): Promise<void> {
+  async function handleLeave(reason: 'LEFT' | 'DISCONNECTED' = 'LEFT'): Promise<void> {
     if (!peer || !currentRoom) return;
     const leavingPeer = peer;
     const room = currentRoom;
 
     removePeer(room, leavingPeer.id);
     broadcast(room, { type: 'peer:left', peerId: leavingPeer.id }, leavingPeer.id);
-    await setParticipantStatus(leavingPeer.id, 'left');
-    console.log(`[signaling] ${leavingPeer.id} saiu de "${room.id}"`);
+    await setParticipantStatus(leavingPeer.id, reason);
+    await recordParticipantEvent({ participantId: leavingPeer.id, roomId: room.id, type: reason });
+    console.log(`[signaling] ${leavingPeer.id} saiu de "${room.id}" (${reason})`);
 
-    // Persiste evento de saída para auditoria
     await broadcastDebugEvent({
       roomId: room.id,
       peerId: leavingPeer.id,
       role: leavingPeer.role ?? 'unknown',
       origin: 'server',
       category: 'system',
-      info: 'peer:left',
-      details: { peerId: leavingPeer.id, role: leavingPeer.role ?? 'unknown' },
+      info: reason === 'DISCONNECTED' ? 'peer:disconnected' : 'peer:left',
+      details: { peerId: leavingPeer.id, role: leavingPeer.role ?? 'unknown', reason },
     });
 
-    // Fecha a sessão da sala quando ela esvazia
+    // Fecha a sala no banco quando esvazia
     if (room.peers.size === 0) {
-      await closeRoomSession(room.id);
-      console.log(`[signaling] sala "${room.id}" vazia — sessão fechada`);
+      await closeRoom(room.id);
+      console.log(`[signaling] sala "${room.id}" vazia — fechada`);
     }
 
     peer = null;

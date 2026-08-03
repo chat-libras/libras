@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import type { PeerInfo } from '../../hooks/useWebRTC.ts';
-import { debugBus } from '../../debug/event-bus.ts';
+import type { PeerInfo } from '../../store/useCallStore/index.ts';
+import { debugBus } from '../../debug/event-bus/index.ts';
 import { VideoTile } from './VideoTile.tsx';
 import { Grid, Spotlight, SpotlightMain, SpotlightSidebar } from './styles.ts';
 
@@ -76,7 +76,7 @@ export function VideoGrid({
     if (autoSpotlight) return;
     const next = pinnedId === id ? null : id;
     setPinnedId(next);
-    debugBus.emit('ui', next ? 'tile:pinned' : 'tile:unpinned', { peerId: id });
+    debugBus.emit('toggle', next ? 'tile:pinned' : 'tile:unpinned', { peerId: id });
   };
 
   return (

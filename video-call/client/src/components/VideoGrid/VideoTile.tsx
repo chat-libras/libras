@@ -1,5 +1,5 @@
 import { useRef, useEffect } from 'react';
-import { Tile, TileVideo, TilePlaceholder, TileLabel } from './styles.ts';
+import { Tile, TileVideo, TilePlaceholder, TileLabel, CamOffText } from './styles.ts';
 
 export interface VideoTileProps {
   stream: MediaStream | null;
@@ -47,7 +47,6 @@ export function VideoTile({
 
   return (
     <Tile
-      className="video-tile"
       $clickable={!!onClick}
       $pinned={pinned}
       onClick={onClick}
@@ -64,7 +63,7 @@ export function VideoTile({
       {(!showVideo || camOff) && (
         <TilePlaceholder $camOff={camOff}>
           <span className="material-icons">{camOff ? 'videocam_off' : 'person'}</span>
-          {camOff && <span className="cam-off-text">Vídeo de {label} desabilitado</span>}
+          {camOff && <CamOffText>Vídeo de {label} desabilitado</CamOffText>}
         </TilePlaceholder>
       )}
       <TileLabel>

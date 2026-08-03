@@ -1,38 +1,31 @@
 import { BrowserRouter, Routes, Route, Navigate, useParams, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
-import { Lobby } from './pages/Lobby.tsx';
-import { Call } from './pages/Call.tsx';
+import { CreateSessionPage } from './pages/createSession/index.tsx';
+import { CreateLinksPage } from './pages/createLinks/index.tsx';
+import { VideoCallPage } from './pages/videoCall/index.tsx';
 import { AppThemeProvider } from './theme/ThemeProvider.tsx';
+import type { RoomModel } from './modules/room/room.model.ts';
+import type { CallParams } from './domain/types/index.ts';
 
-export interface CallParams {
-  roomId: string;
-  peerId: string;
-  role: string;
+export type { CallParams };
+
+function HomeRoute() {
+  const [room, setRoom] = useState<RoomModel | null>(null);
+
+  if (room) return <CreateLinksPage room={room} />;
+  return <CreateSessionPage onCreated={setRoom} />;
 }
 
-function LobbyRoute() {
+function VideoCallRoute() {
+  const { sessionId, participantId } = useParams<{ sessionId: string; participantId: string }>();
   const navigate = useNavigate();
-  const handleJoin = (params: CallParams) => {
-    navigate(`/sala/${params.roomId}/${params.role}`, { state: params });
-  };
-  return <Lobby onJoin={handleJoin} />;
-}
 
-function CallRoute() {
-  const { roomId, role } = useParams<{ roomId: string; role: string }>();
-  const navigate = useNavigate();
-  const [params] = useState<CallParams>(() => {
-    const nav = (window.history.state as { usr?: CallParams })?.usr;
-    return nav ?? {
-      roomId: roomId ?? 'sala',
-      peerId: crypto.randomUUID(),
-      role: role ?? 'patient',
-    };
-  });
+  if (!sessionId || !participantId) return <Navigate to="/" replace />;
 
   return (
-    <Call
-      params={{ ...params, roomId: roomId ?? params.roomId, role: role ?? params.role }}
+    <VideoCallPage
+      sessionId={sessionId}
+      participantId={participantId}
       onLeave={() => navigate('/')}
     />
   );
@@ -43,9 +36,8 @@ export function App() {
     <AppThemeProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<LobbyRoute />} />
-          <Route path="/sala/:roomId/:role" element={<CallRoute />} />
-          <Route path="/sala/:roomId" element={<Navigate to="patient" replace />} />
+          <Route path="/" element={<HomeRoute />} />
+          <Route path="/sala/:sessionId/:participantId" element={<VideoCallRoute />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>

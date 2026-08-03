@@ -1,4 +1,4 @@
-import type { DebugConsoleEvent } from '../../hooks/useDebugConsole.ts';
+import type { DebugConsoleEvent } from '../../hooks/useDebugConsole/index.ts';
 import {
   Wrap, ConsoleHeader, ConsoleTitle, ConsoleCount, ClearBtn,
   EventList, EmptyItem, EventItem, EventTs, EventCategory, EventType, EventPayload,

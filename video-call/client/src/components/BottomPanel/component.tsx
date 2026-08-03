@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { useCallStore } from '../../store/useCallStore.ts';
+import { useControlsStore } from '../../store/useControlsStore/index.ts';
 import { DebugPanel } from '../DebugPanel/index.ts';
 import { getClientEnv } from '../../env.ts';
 import type { LibrasAvatarApi } from 'libras-translator';
@@ -8,25 +8,18 @@ import { AvatarSlot } from './AvatarSlot.tsx';
 
 interface BottomPanelProps {
   avatar: LibrasAvatarApi;
-  debugOpen: boolean;
 }
 
-export function BottomPanel({ avatar, debugOpen }: BottomPanelProps) {
-  const { librasOn } = useCallStore();
+export function BottomPanel({ avatar }: BottomPanelProps) {
+  const { isLibrasOpen, isDebugOpen, librasEverOn } = useControlsStore();
   const { debugMode } = getClientEnv();
 
-  const [librasEverOn, setLibrasEverOn] = useState(false);
-  useEffect(() => {
-    if (librasOn && !librasEverOn) setLibrasEverOn(true);
-  }, [librasOn, librasEverOn]);
-
   const showAvatar = librasEverOn;
-  const showDebug  = debugMode && debugOpen;
+  const showDebug  = debugMode && isDebugOpen;
   const visible    = showAvatar || showDebug;
   const split      = showAvatar && showDebug;
 
-  // Incrementa key quando split muda → React desmonta/remonta AvatarSlot
-  // → containerRef chamado com null depois com novo elemento → Unity reinicializa
+  // Remonta AvatarSlot quando split muda → Unity reinicializa com novo tamanho
   const [slotKey, setSlotKey] = useState(0);
   const prevSplitRef = useRef(split);
   useEffect(() => {
@@ -39,7 +32,7 @@ export function BottomPanel({ avatar, debugOpen }: BottomPanelProps) {
   return (
     <Wrap $visible={visible} $split={split}>
       {showAvatar && (
-        <AvatarSlot key={slotKey} avatar={avatar} librasOn={librasOn} />
+        <AvatarSlot key={slotKey} avatar={avatar} librasOn={isLibrasOpen} />
       )}
       {showDebug && <DebugPanel />}
     </Wrap>

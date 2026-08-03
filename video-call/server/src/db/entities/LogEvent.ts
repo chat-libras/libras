@@ -7,36 +7,30 @@ import {
   JoinColumn,
   Index,
 } from 'typeorm';
-import { Participant } from './Participant.ts';
+import { Participant } from '../../modules/participant/participant.entity.ts';
 
 @Entity('log_events')
+@Index('idx_log_participant_ts', ['participantId', 'ts'])
+@Index('idx_log_category', ['category'])
+@Index('idx_log_origin', ['origin'])
 export class LogEvent {
   @PrimaryColumn('varchar')
   id!: string;
 
-  /** Participante que gerou o evento */
-  @ManyToOne(() => Participant, (p) => p.logs, { onDelete: 'SET NULL', nullable: true, eager: false })
+  /** Participante que gerou o evento (null = evento de servidor sem peer) */
+  @ManyToOne(() => Participant, { onDelete: 'SET NULL', nullable: true, eager: false })
   @JoinColumn({ name: 'participantId' })
   participant!: Participant | null;
 
+  @Index()
   @Column({ type: 'varchar', nullable: true })
   participantId!: string | null;
 
-  @Index()
-  @Column({ type: 'varchar' })
-  roomId!: string;
-
-  @Column({ type: 'varchar' })
-  peerId!: string;
-
-  @Column({ type: 'varchar' })
-  role!: string;
-
-  /** client | server */
-  @Column({ type: 'varchar', default: 'client' })
+  /** CLIENT | SERVER */
+  @Column({ type: 'varchar', default: 'CLIENT' })
   origin!: string;
 
-  /** media | socket | debug | log | system | ... */
+  /** MEDIA | SOCKET | DEBUG | LOG | SYSTEM | ... */
   @Column({ type: 'varchar' })
   category!: string;
 
@@ -49,5 +43,6 @@ export class LogEvent {
   details!: Record<string, unknown> | null;
 
   @CreateDateColumn()
+  @Index()
   ts!: Date;
 }

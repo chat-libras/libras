@@ -1,6 +1,6 @@
 import { useState, Fragment, useCallback } from 'react';
-import { useDebugEvents } from '../../debug/useDebugEvents.ts';
-import { type DebugCategory } from '../../debug/event-bus.ts';
+import { useDebugEvents } from '../../debug/useDebugEvents/index.ts';
+import { type DebugCategory } from '../../debug/event-bus/index.ts';
 import {
   Wrap, Header, HeaderRow, Title, Filters, FilterBtn, ClearBtn, CopyBtn,
   List, Empty, EventRow, ColOrigin, ColRole, ColCategory, ColInfo, ColTs, DetailsRow,

@@ -94,15 +94,15 @@ export const TilePlaceholder = styled.div<{ $camOff?: boolean }>`
       font-size: 40px;
       color: ${$camOff ? '#888' : theme.text.muted};
     }
-
-    span.cam-off-text {
-      color: #888;
-      font-size: 14px;
-      font-weight: 600;
-      text-align: center;
-      padding: 0 12px;
-    }
   `}
+`;
+
+export const CamOffText = styled.span`
+  color: #888;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  padding: 0 12px;
 `;
 
 export const TileLabel = styled.span`

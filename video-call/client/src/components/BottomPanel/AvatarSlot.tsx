@@ -1,5 +1,5 @@
 import type { LibrasAvatarApi } from 'libras-translator';
-import { AvatarContainer, AvatarHint } from './styles.ts';
+import { AvatarContainer, AvatarHint, LibrasStage } from './styles.ts';
 
 interface AvatarSlotProps {
   avatar: LibrasAvatarApi;
@@ -11,7 +11,7 @@ interface AvatarSlotProps {
 export function AvatarSlot({ avatar, librasOn }: AvatarSlotProps) {
   return (
     <AvatarContainer style={{ display: librasOn ? undefined : 'none' }}>
-      <div ref={avatar.containerRef} className="libras-stage" />
+      <LibrasStage ref={avatar.containerRef} />
       {avatar.status === 'loading' && <AvatarHint>⏳ Carregando avatar VLibras…</AvatarHint>}
       {avatar.status === 'error'   && <AvatarHint style={{ color: '#f87171' }}>⚠️ Erro: {avatar.error}</AvatarHint>}
       {avatar.status === 'ready'   && <AvatarHint>🤟 Pronto — sinalizando mensagens</AvatarHint>}

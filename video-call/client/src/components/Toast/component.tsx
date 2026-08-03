@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useToastStore, type ToastVariant } from '../../store/useToastStore.ts';
+import { useToastStore, type ToastVariant } from '../../store/useToastStore/index.ts';
 import { Container, ToastItem, Icon, Message, CloseBtn, VARIANT_ICON } from './styles.ts';
 
 function ToastEntry({ id, message, variant, duration }: {

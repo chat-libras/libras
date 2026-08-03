@@ -28,6 +28,12 @@ export const AvatarContainer = styled.div`
   `}
 `;
 
+export const LibrasStage = styled.div`
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+`;
+
 export const AvatarHint = styled.p`
   font-size: 12px;
   color: ${({ theme }) => theme.text.muted};

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import type { ChatMessage } from '../../hooks/useChat.ts';
-import type { PeerInfo } from '../../hooks/useWebRTC.ts';
+import type { ChatMessage } from '../../hooks/useChat/index.ts';
+import type { PeerInfo } from '../../store/useCallStore/index.ts';
 import {
   Wrap, Header, PeerCount, Messages, Msg,
   MsgSender, MsgText, MsgTs, InputRow, Textarea, SendBtn,
