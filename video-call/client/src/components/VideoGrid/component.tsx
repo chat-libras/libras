@@ -1,12 +1,10 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import type { PeerInfo } from '../../hooks/useWebRTC.ts';
 import { debugBus } from '../../debug/event-bus.ts';
-import {
-  Grid, Spotlight, SpotlightMain, SpotlightSidebar,
-  Tile, TileVideo, TilePlaceholder, TileLabel,
-} from './styles.ts';
+import { VideoTile } from './VideoTile.tsx';
+import { Grid, Spotlight, SpotlightMain, SpotlightSidebar } from './styles.ts';
 
-interface VideoGridProps {
+export interface VideoGridProps {
   localStream: MediaStream | null;
   remoteStreams: Map<string, MediaStream>;
   peers: PeerInfo[];
@@ -24,56 +22,12 @@ interface TileData {
   isLocal: boolean;
 }
 
-function VideoTile({
-  stream, label, muted = false, camOff = false, remote = false, pinned = false, onClick,
-}: {
-  stream: MediaStream | null;
-  label: string;
-  muted?: boolean;
-  camOff?: boolean;
-  remote?: boolean;
-  pinned?: boolean;
-  onClick?: () => void;
-}) {
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-
-  useEffect(() => {
-    const el = videoRef.current;
-    if (!el) return;
-    el.srcObject = stream ?? null;
-  }, [stream]);
-
-  // Mostra vídeo se: stream existe. camOff só controla o ícone do placeholder.
-  const showVideo = !!stream;
-
-  return (
-    <Tile
-      className="video-tile"
-      $clickable={!!onClick}
-      $pinned={pinned}
-      onClick={onClick}
-      title={onClick ? (pinned ? 'Clique para desafixar' : 'Clique para fixar') : undefined}
-    >
-      {/* Vídeo sempre montado quando stream existe — camOff só esconde visualmente */}
-      <TileVideo
-        ref={videoRef}
-        autoPlay
-        playsInline
-        muted={muted}
-        style={{ display: showVideo && !camOff ? 'block' : 'none' }}
-        {...(remote ? { 'data-remote': 'true' } : {})}
-      />
-      {(!showVideo || camOff) && (
-        <TilePlaceholder>
-          <span className="material-icons">{camOff ? 'videocam_off' : 'person'}</span>
-        </TilePlaceholder>
-      )}
-      <TileLabel>
-        {pinned && <span className="material-icons">push_pin</span>}
-        {label}
-      </TileLabel>
-    </Tile>
-  );
+function roleLabel(role: string | undefined) {
+  const labels: Record<string, string> = {
+    patient:      'Paciente',
+    professional: 'Médico',
+  };
+  return role ? (labels[role] ?? role) : 'peer';
 }
 
 export function VideoGrid({
@@ -92,15 +46,15 @@ export function VideoGrid({
   const remoteTiles: TileData[] = peers.map((peer) => ({
     id: peer.id,
     stream: remoteStreams.get(peer.id) ?? null,
-    label: `${peer.role ?? 'peer'} (${peer.id.slice(0, 6)})`,
+    label: `${roleLabel(peer.role)} (${peer.id.slice(0, 6)})`,
     isLocal: false,
   }));
 
   const allTiles = [localTile, ...remoteTiles];
 
   const tileProps = (t: TileData) => ({
-    camOff: t.isLocal ? !cameraOn : !(peerMediaState.get(t.id)?.cameraOn ?? false),
-    muted: t.isLocal ? true : !audioOn,
+    camOff: t.isLocal ? !cameraOn : !(peerMediaState.get(t.id)?.cameraOn ?? true),
+    muted:  t.isLocal ? true : !audioOn,
   });
 
   if (!spotlightMode) {
@@ -114,9 +68,9 @@ export function VideoGrid({
   }
 
   const autoSpotlight = remoteTiles.length === 1;
-  const spotlightId = pinnedId ?? (autoSpotlight ? remoteTiles[0].id : null);
+  const spotlightId   = pinnedId ?? (autoSpotlight ? remoteTiles[0].id : null);
   const spotlightTile = allTiles.find((t) => t.id === spotlightId) ?? allTiles[0];
-  const sideTiles = allTiles.filter((t) => t.id !== spotlightTile.id);
+  const sideTiles     = allTiles.filter((t) => t.id !== spotlightTile.id);
 
   const handlePin = (id: string) => {
     if (autoSpotlight) return;

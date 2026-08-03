@@ -1,9 +1,10 @@
-import { useState, Fragment } from 'react';
+import { useState, Fragment, useCallback } from 'react';
 import { useDebugEvents } from '../../debug/useDebugEvents.ts';
 import { type DebugCategory } from '../../debug/event-bus.ts';
 import {
-  Wrap, Header, Title, Filters, FilterBtn, ClearBtn,
+  Wrap, Header, HeaderRow, Title, Filters, FilterBtn, ClearBtn, CopyBtn,
   List, Empty, EventRow, ColOrigin, ColRole, ColCategory, ColInfo, ColTs, DetailsRow,
+  DateFilters, DateInput, DateLabel, Spinner,
 } from './styles.ts';
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -39,7 +40,6 @@ function roleColor(role: string): string {
 
 function formatDetails(details: Record<string, unknown> | null): string | null {
   if (!details) return null;
-  // remove campos redundantes já exibidos nas colunas
   const { peerId, role, _peerId, _role, ...rest } = details;
   void peerId; void role; void _peerId; void _role;
   if (Object.keys(rest).length === 0) return null;
@@ -48,7 +48,10 @@ function formatDetails(details: Record<string, unknown> | null): string | null {
 
 export function DebugPanel() {
   const [activeFilters, setActiveFilters] = useState<DebugCategory[]>([...ALL_CATEGORIES]);
-  const { events, clear } = useDebugEvents(activeFilters);
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo]     = useState('');
+  const { events, clear, loading } = useDebugEvents(activeFilters);
+  const [copied, setCopied] = useState(false);
 
   const toggleFilter = (cat: DebugCategory) => {
     setActiveFilters((prev) =>
@@ -56,28 +59,57 @@ export function DebugPanel() {
     );
   };
 
+  const filteredByDate = events.filter((e) => {
+    if (dateFrom && e.ts < new Date(dateFrom).getTime()) return false;
+    if (dateTo   && e.ts > new Date(dateTo).getTime())   return false;
+    return true;
+  });
+
+  const copyLogs = useCallback(() => {
+    const text = filteredByDate.map((e) => {
+      const ts = new Date(e.ts).toLocaleTimeString();
+      const base = `[${ts}] [${e.origin}] [${e.role || '—'}] [${e.category}] ${e.info}`;
+      const details = e.details ? `\n  ${JSON.stringify(e.details)}` : '';
+      return base + details;
+    }).join('\n');
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }, [filteredByDate]);
+
   return (
     <Wrap>
       <Header>
-        <Title>🐛 Debug</Title>
-        <Filters>
-          {ALL_CATEGORIES.map((cat) => (
-            <FilterBtn
-              key={cat}
-              $active={activeFilters.includes(cat)}
-              $color={categoryColor(cat)}
-              onClick={() => toggleFilter(cat)}
-            >
-              {cat}
-            </FilterBtn>
-          ))}
-        </Filters>
-        <ClearBtn onClick={clear}>Limpar</ClearBtn>
+        <HeaderRow>
+          <Title>🐛 Debug</Title>
+          <DateFilters>
+            <DateLabel>de</DateLabel>
+            <DateInput type="datetime-local" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} title="Filtrar a partir de" />
+            <DateLabel>até</DateLabel>
+            <DateInput type="datetime-local" value={dateTo} onChange={(e) => setDateTo(e.target.value)} title="Filtrar até" />
+            {(dateFrom || dateTo) && (
+              <ClearBtn onClick={() => { setDateFrom(''); setDateTo(''); }} title="Limpar filtro de data">✕</ClearBtn>
+            )}
+          </DateFilters>
+          <CopyBtn onClick={copyLogs} title="Copiar todos os logs">{copied ? '✅' : '📋'}</CopyBtn>
+          <ClearBtn onClick={clear}>Limpar</ClearBtn>
+        </HeaderRow>
+        <HeaderRow>
+          <Filters>
+            {ALL_CATEGORIES.map((cat) => (
+              <FilterBtn key={cat} $active={activeFilters.includes(cat)} $color={categoryColor(cat)} onClick={() => toggleFilter(cat)}>
+                {cat}
+              </FilterBtn>
+            ))}
+          </Filters>
+        </HeaderRow>
       </Header>
 
       <List>
-        {events.length === 0 && <Empty>Nenhum evento ainda…</Empty>}
-        {events.map((e) => {
+        {loading && <Spinner>Carregando eventos…</Spinner>}
+        {!loading && filteredByDate.length === 0 && <Empty>Nenhum evento ainda…</Empty>}
+        {!loading && filteredByDate.map((e) => {
           const details = formatDetails(e.details);
           return (
             <Fragment key={e.id}>

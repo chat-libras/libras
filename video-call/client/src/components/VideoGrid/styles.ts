@@ -4,11 +4,13 @@ export const Grid = styled.div`
   ${({ theme }) => css`
     display: flex;
     flex-wrap: wrap;
+    align-content: flex-start;
     gap: 8px;
     padding: 8px;
     background: ${theme.bg.primary};
     border-radius: 8px;
-    min-height: 180px;
+    flex: 1;
+    min-height: 0;
   `}
 `;
 
@@ -19,8 +21,8 @@ export const Spotlight = styled.div`
     background: ${theme.bg.primary};
     border-radius: 8px;
     overflow: hidden;
-    height: 100%;
-    min-height: 300px;
+    flex: 1;
+    min-height: 0;
   `}
 `;
 
@@ -68,23 +70,37 @@ export const Tile = styled.div<{ $clickable?: boolean; $pinned?: boolean }>`
 `;
 
 export const TileVideo = styled.video`
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
+  z-index: 1;
 `;
 
-export const TilePlaceholder = styled.div`
-  ${({ theme }) => css`
-    width: 100%;
-    height: 100%;
+export const TilePlaceholder = styled.div<{ $camOff?: boolean }>`
+  ${({ theme, $camOff }) => css`
+    position: absolute;
+    inset: 0;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    background: ${theme.bg.tile};
+    gap: 8px;
+    background: ${$camOff ? '#5e5e5e' : theme.bg.tile};
+    z-index: 2;
 
     .material-icons {
       font-size: 40px;
-      color: ${theme.text.muted};
+      color: ${$camOff ? '#888' : theme.text.muted};
+    }
+
+    span.cam-off-text {
+      color: #888;
+      font-size: 14px;
+      font-weight: 600;
+      text-align: center;
+      padding: 0 12px;
     }
   `}
 `;

@@ -9,7 +9,7 @@ import { useCallStore } from '../store/useCallStore.ts';
 import { VideoGrid } from '../components/VideoGrid/index.ts';
 import { ChatPanel } from '../components/ChatPanel/index.ts';
 import { MediaControls } from '../components/MediaControls/index.ts';
-import { DebugPanel } from '../components/DebugPanel/index.ts';
+import { BottomPanel } from '../components/BottomPanel/index.ts';
 import { Sidebar, type SidebarItem } from '../components/Sidebar/index.ts';
 import { ToastContainer } from '../components/Toast/index.ts';
 import { debugBus } from '../debug/event-bus.ts';
@@ -18,23 +18,11 @@ import { getClientEnv } from '../env.ts';
 import { useAppTheme } from '../theme/ThemeProvider.tsx';
 import type { CallParams } from '../App.tsx';
 
-const AvatarContainer = styled.div`
-  background: ${({ theme }) => theme.bg.tile};
-  border: 1px solid ${({ theme }) => theme.border};
-  border-radius: 8px;
-  padding: 12px;
-  min-height: 240px;
+const VideoGridWrapper = styled.div`
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  flex: 1;
-`;
-
-const AvatarHint = styled.p`
-  font-size: 12px;
-  color: ${({ theme }) => theme.text.muted};
-  margin-top: 8px;
 `;
 
 interface CallProps {
@@ -71,10 +59,7 @@ export function Call({ params, onLeave }: CallProps) {
 
   // Avatar só monta após a primeira vez que libras for ligado.
   // Depois que montou, nunca desmonta (canvas Unity não sobrevive a unmount).
-  const [librasEverOn, setLibrasEverOn] = useState(false);
-  useEffect(() => {
-    if (librasOn && !librasEverOn) setLibrasEverOn(true);
-  }, [librasOn, librasEverOn]);
+  // (Estado movido para BottomPanel)
 
   // Inicializa debug emitter quando WS conectar
   useEffect(() => {
@@ -159,31 +144,20 @@ export function Call({ params, onLeave }: CallProps) {
 
       <div className="call-body">
         <div className="call-main">
-          <VideoGrid
-            localStream={localStream}
-            remoteStreams={remoteStreams}
-            peers={peers}
-            peerMediaState={peerMediaState}
-            myId={params.peerId}
-            cameraOn={cameraOn}
-            audioOn={audioOn}
-            spotlightMode={!librasOn}
-          />
+          <VideoGridWrapper>
+            <VideoGrid
+              localStream={localStream}
+              remoteStreams={remoteStreams}
+              peers={peers}
+              peerMediaState={peerMediaState}
+              myId={params.peerId}
+              cameraOn={cameraOn}
+              audioOn={audioOn}
+              spotlightMode={peers.length > 0}
+            />
+          </VideoGridWrapper>
 
-          {/* Área inferior: Libras + Debug. Container só monta após libras ser ligado pela 1ª vez. */}
-          {(librasEverOn || debugOpen) && (
-            <div className={`call-bottom-area${debugOpen ? ' call-bottom-area--split' : ''}`}>
-              {librasEverOn && (
-                <AvatarContainer style={{ display: librasOn ? undefined : 'none' }}>
-                  <div ref={avatar.containerRef} className="libras-stage" />
-                  {avatar.status === 'loading' && <AvatarHint>⏳ Carregando avatar VLibras…</AvatarHint>}
-                  {avatar.status === 'error'   && <AvatarHint style={{ color: '#f87171' }}>⚠️ Erro: {avatar.error}</AvatarHint>}
-                  {avatar.status === 'ready'   && <AvatarHint>🤟 Pronto — sinalizando mensagens</AvatarHint>}
-                </AvatarContainer>
-              )}
-              {debugMode && debugOpen && <DebugPanel />}
-            </div>
-          )}
+          <BottomPanel avatar={avatar} debugOpen={debugOpen} />
         </div>
 
         <Sidebar

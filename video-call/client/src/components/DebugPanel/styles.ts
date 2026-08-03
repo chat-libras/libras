@@ -17,14 +17,19 @@ export const Wrap = styled.div`
 export const Header = styled.div`
   ${({ theme }) => css`
     display: flex;
-    align-items: center;
-    gap: 8px;
+    flex-direction: column;
+    gap: 6px;
     padding: 6px 12px;
     border-bottom: 1px solid ${theme.border};
     background: ${theme.bg.secondary};
     flex-shrink: 0;
-    min-height: 42px;
   `}
+`;
+
+export const HeaderRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
 `;
 
 export const Title = styled.span`
@@ -68,10 +73,77 @@ export const ClearBtn = styled.button`
     font-family: monospace;
     flex-shrink: 0;
 
-    &:hover {
-      background: ${theme.border};
-    }
+    &:hover { background: ${theme.border}; }
   `}
+`;
+
+export const CopyBtn = styled.button`
+  ${({ theme }) => css`
+    padding: 2px 8px;
+    background: ${theme.bg.tertiary};
+    border: 1px solid ${theme.border};
+    border-radius: 4px;
+    color: ${theme.text.secondary};
+    cursor: pointer;
+    font-size: 12px;
+    flex-shrink: 0;
+
+    &:hover { background: ${theme.border}; }
+  `}
+`;
+
+export const DateFilters = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+`;
+
+export const DateInput = styled.input`
+  ${({ theme }) => css`
+    padding: 2px 6px;
+    background: ${theme.bg.tertiary};
+    border: 1px solid ${theme.border};
+    border-radius: 4px;
+    color: ${theme.text.secondary};
+    font-size: 10px;
+    font-family: monospace;
+    cursor: pointer;
+    &::-webkit-calendar-picker-indicator { filter: invert(0.5); }
+  `}
+`;
+
+export const DateLabel = styled.span`
+  ${({ theme }) => css`
+    color: ${theme.text.muted};
+    font-size: 10px;
+    flex-shrink: 0;
+  `}
+`;
+
+export const Spinner = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  color: #6b7280;
+  font-size: 12px;
+  gap: 8px;
+
+  &::before {
+    content: '';
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid #6b7280;
+    border-top-color: #60a5fa;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
 `;
 
 export const List = styled.ul`

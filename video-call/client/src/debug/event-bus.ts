@@ -22,10 +22,24 @@ type Listener = (event: DebugEvent) => void;
 const listeners = new Set<Listener>();
 let enabled = false;
 
+// Buffer em memória — persiste eventos mesmo antes do painel montar
+const MAX_BUFFER = 500;
+const buffer: DebugEvent[] = [];
+
+function pushToBuffer(event: DebugEvent): void {
+  const idx = buffer.findIndex((e) => e.id === event.id);
+  if (idx !== -1) return; // dedup
+  buffer.unshift(event);
+  if (buffer.length > MAX_BUFFER) buffer.length = MAX_BUFFER;
+}
+
 export const debugBus = {
   enable: () => { enabled = true; },
   disable: () => { enabled = false; },
   isEnabled: () => enabled,
+
+  /** Retorna snapshot atual do buffer (para hidratação ao montar o painel) */
+  getBuffer: (): DebugEvent[] => [...buffer],
 
   emit(
     category: DebugCategory,
@@ -45,13 +59,15 @@ export const debugBus = {
       details: opts?.details ?? null,
       ts: Date.now(),
     };
+    pushToBuffer(event);
     listeners.forEach((l) => l(event));
   },
 
-  /** Injeta evento já formado (vindo do servidor) preservando o id original */
+  /** Injeta evento já formado (vindo do servidor) preservando o id original.
+   *  Funciona mesmo com debugBus desabilitado — logs do servidor sempre persistem. */
   inject(event: DebugEvent): void {
-    if (!enabled) return;
-    listeners.forEach((l) => l(event));
+    pushToBuffer(event);
+    if (enabled) listeners.forEach((l) => l(event));
   },
 
   subscribe(listener: Listener): () => void {

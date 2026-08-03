@@ -68,12 +68,12 @@ export function useWebRTC(params: CallParams) {
       const [s] = ev.streams;
       console.log(`[webrtc] ontrack ← ${peerId} | kind: ${ev.track.kind} streams: ${ev.streams.length}`);
       if (s) {
-        const store = useCallStore.getState();
-        store.setRemoteStream(peerId, s);
-        const current = store.peerMediaState.get(peerId);
-        if (!current?.cameraOn) {
-          store.setPeerMediaState(peerId, { cameraOn: true, micOn: current?.micOn ?? true });
-        }
+        useCallStore.setState((state) => {
+          const clone = new MediaStream(s.getTracks());
+          const newRemote = new Map(state.remoteStreams).set(peerId, clone);
+          // Não sobrescreve cameraOn — respeita o media:state real do peer
+          return { remoteStreams: newRemote };
+        });
       }
     };
 
@@ -85,8 +85,10 @@ export function useWebRTC(params: CallParams) {
 
     pc.onconnectionstatechange = () => {
       const state = pc.connectionState;
+      console.log(`[webrtc] connectionState ${peerId}: ${state}`);
       debugBus.emit('socket', 'rtc:connection-state', { peerId, state });
-      if (state === 'failed' || state === 'closed') {
+      // Só remove em 'failed' — 'disconnected' é temporário, ICE pode reconectar
+      if (state === 'failed') {
         pcsRef.current.delete(peerId);
       }
     };
@@ -129,7 +131,9 @@ export function useWebRTC(params: CallParams) {
   // Fetch logs da sala via REST e injeta no debugBus (dedup por id)
   const fetchRoomLogs = useCallback(async (roomId: string) => {
     try {
-      const apiBase = serverUrl.replace(/^ws/, 'http');
+      // serverUrl pode ser ws://host/ws ou ws://host — extrai só a origem HTTP
+      const url = new URL(serverUrl);
+      const apiBase = `${url.protocol === 'wss:' ? 'https' : 'http'}://${url.host}`;
       const res = await fetch(`${apiBase}/rooms/${roomId}/logs`);
       if (!res.ok) return;
       const logs = await res.json() as DebugEventDto[];
@@ -142,10 +146,17 @@ export function useWebRTC(params: CallParams) {
   const connectWs = useCallback(async () => {
     if (disposedRef.current) return;
 
-    // Fecha PCs e WS anteriores
+    // Fecha PCs anteriores
     pcsRef.current.forEach((pc) => pc.close());
     pcsRef.current.clear();
-    wsRef.current?.close();
+
+    // Remove handlers do WS anterior antes de fechar — evita toast falso de desconexão
+    if (wsRef.current) {
+      wsRef.current.onclose = null;
+      wsRef.current.onerror = null;
+      wsRef.current.onmessage = null;
+      wsRef.current.close();
+    }
 
     const socket = new WebSocket(serverUrl);
     wsRef.current = socket;
@@ -157,7 +168,12 @@ export function useWebRTC(params: CallParams) {
 
       const msgType = isReconnectRef.current ? 'reconnect' : 'join';
       socket.send(JSON.stringify({ type: msgType, roomId: params.roomId, peerId: params.peerId, role: params.role }));
-      socket.send(JSON.stringify({ type: 'media:state', from: params.peerId, cameraOn: false, micOn: false }));
+      const ls = localStreamRef.current;
+      socket.send(JSON.stringify({
+        type: 'media:state', from: params.peerId,
+        cameraOn: ls?.getVideoTracks().some((t) => t.enabled) ?? true,
+        micOn:    ls?.getAudioTracks().some((t) => t.enabled) ?? true,
+      }));
       if (getClientEnv().debugMode) socket.send(JSON.stringify({ type: 'debug:subscribe' }));
 
       if (isReconnectRef.current) {
@@ -210,7 +226,7 @@ export function useWebRTC(params: CallParams) {
         case 'peer:joined': {
           const peer = msg['peer'] as PeerInfo;
           s.addPeer(peer);
-          s.setPeerMediaState(peer.id, { cameraOn: false, micOn: false });
+          // Não pré-seta cameraOn:false — aguarda media:state real do peer
           debugBus.emit('media', 'peer:joined', { peerId: peer.id, role: peer.role ?? 'unknown' });
           if (!initialPeersRef.current.has(peer.id)) toast.info(`${roleLabel(peer.role)} entrou na chamada`);
 
@@ -240,6 +256,7 @@ export function useWebRTC(params: CallParams) {
 
         case 'media:state': {
           const { from, cameraOn: cam, micOn: mic } = msg as unknown as { from: string; cameraOn: boolean; micOn: boolean };
+          console.log(`[webrtc] media:state ← ${from} | cameraOn: ${cam} micOn: ${mic}`);
           s.setPeerMediaState(from, { cameraOn: cam, micOn: mic });
           break;
         }
@@ -247,18 +264,21 @@ export function useWebRTC(params: CallParams) {
         // ── Offer recebido — sou o respondente ─────────────────────────
         case 'offer': {
           const from = msg['from'] as string;
-          // Pega ou cria PC (pode já existir do peer:joined)
           let pc = pcsRef.current.get(from);
+          console.log(`[webrtc] offer ← ${from} | pc exists: ${!!pc}`);
           if (!pc) pc = createPC(from);
           await pc.setRemoteDescription(msg['sdp'] as RTCSessionDescriptionInit);
           const answer = await pc.createAnswer();
           await pc.setLocalDescription(answer);
+          console.log(`[webrtc] answer → ${from} | signalingState: ${pc.signalingState}`);
           sendWs({ type: 'answer', to: from, from: params.peerId, sdp: answer });
           break;
         }
 
         case 'answer': {
-          const pc = pcsRef.current.get(msg['from'] as string);
+          const from = msg['from'] as string;
+          const pc = pcsRef.current.get(from);
+          console.log(`[webrtc] answer ← ${from} | pc exists: ${!!pc} signalingState: ${pc?.signalingState}`);
           if (pc) await pc.setRemoteDescription(msg['sdp'] as RTCSessionDescriptionInit);
           break;
         }
@@ -304,8 +324,7 @@ export function useWebRTC(params: CallParams) {
       if (disposedRef.current) { stream.getTracks().forEach((t) => t.stop()); return; }
 
       // Inicia com câmera e mic desligados
-      stream.getVideoTracks().forEach((t) => { t.enabled = false; });
-      stream.getAudioTracks().forEach((t) => { t.enabled = false; });
+      stream.getTracks().forEach((t) => { t.enabled = false; });
       localStreamRef.current = stream;
       useCallStore.getState().setLocalStream(stream);
 

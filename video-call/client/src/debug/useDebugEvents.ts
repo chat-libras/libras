@@ -5,24 +5,27 @@ const MAX_EVENTS = 500;
 
 export function useDebugEvents(filter?: DebugCategory[]) {
   const [events, setEvents] = useState<DebugEvent[]>([]);
+  const [loading, setLoading] = useState(true);
   const filterRef = useRef(filter);
   filterRef.current = filter;
 
   useEffect(() => {
+    // Hidrata com buffer existente
+    setEvents(debugBus.getBuffer());
+    setLoading(false);
+
     return debugBus.subscribe((event) => {
       setEvents((prev) => {
-        // Deduplicação por id — debug:history reenvia eventos já vistos
         if (prev.some((e) => e.id === event.id)) return prev;
         return [event, ...prev].slice(0, MAX_EVENTS);
       });
     });
   }, []);
 
-  // Aplica filtro de categoria nos eventos já coletados (reativo sem re-subscribe)
   const filtered = filter
     ? events.filter((e) => filter.includes(e.category))
     : events;
 
   const clear = () => setEvents([]);
-  return { events: filtered, clear };
+  return { events: filtered, clear, loading };
 }
