@@ -1,9 +1,82 @@
-/* Demo de videochamada acessível (médico ↔ cliente surdo). */
+/* Harness de teste do plugin libras-translator (specs chat e avatar). */
 
-.call {
-  max-width: 1040px;
+/* ── Layout global do demo ─────────────────────────────────────────── */
+.demo {
+  max-width: 1060px;
   margin: 0 auto;
   padding: 20px;
+  font-family: system-ui, sans-serif;
+  color: #1a1a1a;
+}
+.demo__header h1 {
+  margin: 0 0 4px;
+  font-size: 20px;
+}
+.demo__header p {
+  margin: 0 0 12px;
+  color: #555;
+  font-size: 14px;
+}
+
+/* ── Navegação por tabs ─────────────────────────────────────────────── */
+.demo__tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 0;
+  border-bottom: 2px solid #ddd;
+  padding-bottom: 0;
+}
+.demo__tab {
+  padding: 8px 14px;
+  font: inherit;
+  font-size: 13px;
+  background: none;
+  border: 1px solid #ddd;
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  cursor: pointer;
+  color: #555;
+  margin-bottom: -2px;
+  transition: background 0.15s;
+}
+.demo__tab:hover {
+  background: #f0f0f0;
+}
+.demo__tab--active {
+  background: #fff;
+  border-color: #ddd;
+  border-bottom-color: #fff;
+  color: #111;
+  font-weight: 600;
+}
+
+/* ── Cabeçalho da spec ativa ─────────────────────────────────────────── */
+.demo__spec-header {
+  border: 1px solid #ddd;
+  border-top: none;
+  padding: 12px 16px 10px;
+  background: #fafafa;
+}
+.demo__spec-header h2 {
+  margin: 0 0 4px;
+  font-size: 16px;
+}
+.demo__spec-header p {
+  margin: 0;
+  color: #555;
+  font-size: 13px;
+}
+
+/* ── Conteúdo da spec ────────────────────────────────────────────────── */
+.demo__content {
+  padding-top: 16px;
+}
+
+/* ── Layout reutilizável call (specs 2, 3, 4) ─────────────────────────── */
+.call {
+  max-width: 1060px;
+  margin: 0 auto;
   font-family: system-ui, sans-serif;
   color: #1a1a1a;
 }
@@ -101,4 +174,128 @@
   padding: 10px 14px;
   cursor: pointer;
   font: inherit;
+}
+
+/* ── Shared spec helpers ─────────────────────────────────────────────── */
+.spec__section-title {
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #444;
+}
+.spec__status-row {
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.spec__badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+.spec__badge--loading  { background: #e9ecf0; color: #555; }
+.spec__badge--ready    { background: #d4edda; color: #155724; }
+.spec__badge--listening { background: #cce5ff; color: #004085; }
+.spec__badge--error    { background: #f8d7da; color: #721c24; }
+.spec__error   { color: #b00; font-size: 12px; }
+.spec__interim { color: #555; font-style: italic; font-size: 13px; margin: 6px 0 0; }
+.spec__field {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.spec__input {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 13px;
+}
+.spec__input--sm { flex: 0 1 180px; }
+.spec__btn {
+  padding: 8px 14px;
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.spec__btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.spec__btn--stop { background: #dc2626; }
+.spec__label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+.spec__range { flex: 1; }
+.spec__code-hint {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: #888;
+}
+
+/* ── Spec 1 — Avatar livre ───────────────────────────────────────────── */
+.spec1 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  align-items: start;
+}
+@media (max-width: 760px) {
+  .spec1 { grid-template-columns: 1fr; }
+}
+.spec1__controls {
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  padding: 16px;
+  background: #fafafa;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.spec1__avatar-area {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.spec1__avatar-label {
+  margin: 0;
+  font-size: 12px;
+  color: #888;
+}
+.spec1__avatar-box {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  border: 2px dashed #ccc;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #111;
+}
+
+/* ── Spec 4 — Provider global ────────────────────────────────────────── */
+.spec4__config {
+  border: 1px solid #d0e4ff;
+  background: #f0f7ff;
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.spec4__desc {
+  margin: 0;
+  font-size: 13px;
+  color: #334;
 }
