@@ -1,6 +1,8 @@
 import { useCallback, useRef, useState } from 'react';
 import { createVLibrasPlayer, resetVLibrasPlayer, type VLibrasLoaderOptions } from '../core/vlibras-loader';
 import { VLibrasSignRenderer } from '../core/vlibras-renderer';
+import type { SignRenderer } from '../core/sign-renderer';
+import { useLibrasConfig } from './LibrasProvider';
 
 // ---------------------------------------------------------------------------
 // Hook enxuto do AVATAR: monta o player do VLibras num container e sinaliza um
@@ -38,7 +40,7 @@ export interface LibrasAvatarApi {
   /** Ajusta a velocidade da sinalização ao vivo. */
   setSpeed: (speed: number) => void;
   /** Renderer interno — use para integrar com LibrasObserver (uso avançado). */
-  renderer: VLibrasSignRenderer | null;
+  renderer: SignRenderer | null;
 }
 
 // Singleton: o Unity/WebGL do VLibras é pesado e só deve existir uma vez
@@ -46,7 +48,8 @@ export interface LibrasAvatarApi {
 let rendererSingleton: VLibrasSignRenderer | null = null;
 
 export function useLibrasAvatar(options: UseLibrasAvatarOptions = {}): LibrasAvatarApi {
-  const { vlibras, speed: initialSpeed = 1, onReady } = options;
+  const ctx = useLibrasConfig();
+  const { vlibras = ctx.vlibras, speed: initialSpeed = 1, onReady } = options;
 
   const [status, setStatus] = useState<LibrasAvatarStatus>('loading');
   const [error, setError] = useState<string | null>(null);
@@ -64,7 +67,6 @@ export function useLibrasAvatar(options: UseLibrasAvatarOptions = {}): LibrasAva
     rendererSingleton?.play(text);
   }, []);
 
-  // Callback ref: dispara o load assim que o container é inserido no DOM.
   const loadStartedRef = useRef(false);
 
   const attachContainer = useCallback((el: HTMLDivElement | null) => {

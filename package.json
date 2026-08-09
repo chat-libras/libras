@@ -16,11 +16,10 @@
     "dist"
   ],
   "scripts": {
-    "dev": "vite",
-    "vc:server": "yarn --cwd video-call/server dev",
-    "vc:client": "yarn --cwd video-call/client dev",
+    "demo": "yarn --cwd examples/demo dev",
+    "vc:server": "yarn --cwd examples/video-call/server dev",
+    "vc:client": "yarn --cwd examples/video-call/client dev",
     "vc": "concurrently \"yarn vc:server\" \"yarn vc:client\"",
-    "start": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",

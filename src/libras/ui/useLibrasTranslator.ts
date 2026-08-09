@@ -19,7 +19,7 @@ import {
 //
 //   const libras = useLibrasTranslator({
 //     audio: { kind: 'stream', stream: remoteAudioStream },  // faixa de áudio do WebRTC
-//     asr:   { provider: 'deepgram', apiKey: import.meta.env.VITE_DEEPGRAM_KEY },
+//     asr:   { provider: 'custom', factory: myASRFactory },
 //   });
 //   return <div ref={libras.containerRef} className="avatar" />;
 // ---------------------------------------------------------------------------

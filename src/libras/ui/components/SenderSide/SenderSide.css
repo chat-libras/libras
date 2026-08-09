@@ -1,0 +1,7 @@
+/* Lado médico: botão de microfone (captura de fala). */
+.libras-chat__mic {
+  cursor: pointer;
+}
+.libras-chat__mic--on {
+  background: var(--libras-color-mic-on-bg, #ffd7d7);
+}

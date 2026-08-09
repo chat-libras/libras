@@ -4,7 +4,7 @@ import './SendForm.css';
 
 // Formulário de envio de texto (reusado pelos dois lados). `children` permite
 // adicionar controles ao lado do botão Enviar (ex.: o microfone do médico).
-export function SendForm({ placeholder, onSend, children }: SendFormProps) {
+export function SendForm({ placeholder, onSend, submitLabel = 'Enviar', children }: SendFormProps) {
   const [text, setText] = useState('');
 
   const submit = (e: React.FormEvent) => {
@@ -17,8 +17,13 @@ export function SendForm({ placeholder, onSend, children }: SendFormProps) {
 
   return (
     <form className="libras-chat__form" onSubmit={submit}>
-      <input value={text} onChange={(e) => setText(e.target.value)} placeholder={placeholder} />
-      <button type="submit">Enviar</button>
+      <input
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        placeholder={placeholder}
+        aria-label={placeholder}
+      />
+      <button type="submit">{submitLabel}</button>
       {children}
     </form>
   );

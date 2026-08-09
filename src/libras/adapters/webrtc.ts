@@ -4,11 +4,11 @@
 // alimentar o plugin:
 //
 //   <LibrasTranslator audio={{ kind: 'stream', stream }}
-//                     asr={{ provider: 'deepgram', apiKey }} />
+//                     asr={{ provider: 'custom', factory: myASRFactory }} />
 //
 // O plugin traduz o áudio do participante REMOTO de uma chamada. A Web Speech API
-// (grátis) só ouve o microfone local — por isso o caminho de stream exige um ASR
-// de nuvem (ex.: Deepgram). Ver src/libras/core/asr/phrase-source.ts.
+// (grátis) só ouve o microfone local — para stream de chamada, injete um ASR de
+// nuvem via { provider: 'custom', factory }. Ver core/asr/phrase-source.ts.
 //
 // Estes helpers não têm dependências de plataforma: servem de base para os
 // adapters concretos (Vonage, Twilio, Agora, WebRTC puro).

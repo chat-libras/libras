@@ -1,32 +1,22 @@
-import { DoctorSide } from './components/DoctorSide/DoctorSide';
-import { ClientSide } from './components/ClientSide/ClientSide';
+import { SenderSide } from './components/SenderSide/SenderSide';
+import { ReceiverSide } from './components/ReceiverSide/ReceiverSide';
 import { resolveLabels } from './utils/messages';
+import { resolveStrings } from './strings';
+import { useLibrasConfig } from './LibrasProvider';
 import type { LibrasChatProps } from './interfaces/LibrasChatProps';
 import type { AudioSource, ASROptions } from '../core/asr/phrase-source';
 import './LibrasChat.css';
 
 // ---------------------------------------------------------------------------
-// <LibrasChat> — chat assimétrico de acessibilidade, pronto para embutir em
-// qualquer app (telemedicina, atendimento, suporte).
+// <LibrasChat> — chat assimétrico de acessibilidade, agnóstico de domínio e
+// de transporte. Funciona em qualquer videochamada (saúde, educação, suporte).
 //
-//   role="doctor"  (ouvinte) → fala (captura de áudio) ou escreve; lê as
-//                              respostas do outro lado em texto. A captura de
-//                              áudio é plugável (Web Speech grátis por padrão,
-//                              ou um provedor de nuvem via `asr`/`audio`).
-//   role="client"  (surdo)   → vê as mensagens do médico sinalizadas pelo
-//                              avatar do VLibras; responde por texto.
+//   role="sender"   → fala (captura de áudio) ou digita; lê respostas em texto.
+//   role="receiver" → vê as mensagens sinalizadas pelo avatar VLibras; responde
+//                     por texto.
 //
-// O componente é *controlado* e agnóstico de transporte: você passa o histórico
-// (`messages`) e recebe cada envio em `onSend`. Ligue `onSend`/`messages` ao seu
-// canal real (Vonage `session.signal()`, WebSocket, Firebase, etc.). Assim a
-// mesma peça serve para os dois lados, em máquinas diferentes.
-//
-//   const [msgs, setMsgs] = useState<LibrasChatMessage[]>([]);
-//   <LibrasChat role="doctor" messages={msgs} onSend={sendToPeer} />
-//
-// Esta camada só orquestra: escolhe o lado pelo `role` e resolve os defaults.
-// Cada componente importa o próprio `.css`; a lógica de cada lado vive em
-// `./components/*` (view), `./hooks/*` (comportamento) e `./utils/*` (puro).
+// O componente é *controlado*: você passa o histórico (`messages`) e recebe
+// cada envio em `onSend`. Ligue ao seu transporte (WebSocket, Firebase, etc.).
 // ---------------------------------------------------------------------------
 
 // Re-exporta os tipos públicos (a implementação mora em `./interfaces`).
@@ -45,31 +35,38 @@ export function LibrasChat({
   vlibras,
   speed = 1.3,
   labels,
+  strings: stringsProp,
   className,
   style,
 }: LibrasChatProps) {
+  const ctx = useLibrasConfig();
   const resolvedLabels = resolveLabels(labels);
-  // Lado médico: microfone + Web Speech (grátis) por padrão; sobrescreva via props.
-  const resolvedAudio: AudioSource = audio ?? { kind: 'microphone' };
-  const resolvedAsr: ASROptions = asr ?? { provider: 'webspeech', lang: 'pt-BR' };
+  const resolvedStrings = resolveStrings({ ...ctx.strings, ...stringsProp });
+
+  // Props locais têm prioridade; fallback para o LibrasProvider; último fallback: defaults.
+  const resolvedAudio: AudioSource = audio ?? ctx.audio ?? { kind: 'microphone' };
+  const resolvedAsr: ASROptions = asr ?? ctx.asr ?? { provider: 'webspeech', lang: 'pt-BR' };
+  const resolvedVlibras = vlibras ?? ctx.vlibras;
 
   return (
     <section className={`libras-chat ${className ?? ''}`} style={style}>
-      {role === 'doctor' ? (
-        <DoctorSide
+      {role === 'sender' ? (
+        <SenderSide
           messages={messages}
           onSend={onSend}
           labels={resolvedLabels}
           audio={resolvedAudio}
           asr={resolvedAsr}
+          strings={resolvedStrings}
         />
       ) : (
-        <ClientSide
+        <ReceiverSide
           messages={messages}
           onSend={onSend}
           labels={resolvedLabels}
-          vlibras={vlibras}
+          vlibras={resolvedVlibras}
           speed={speed}
+          strings={resolvedStrings}
         />
       )}
     </section>

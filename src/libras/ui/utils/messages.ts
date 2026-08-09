@@ -3,8 +3,8 @@ import type { LibrasChatMessage, LibrasChatRole } from '../interfaces/LibrasChat
 // Helpers puros do chat (sem React/DOM) — testáveis isoladamente.
 
 export const DEFAULT_LABELS: Record<LibrasChatRole, string> = {
-  doctor: 'Médico',
-  client: 'Cliente',
+  sender: 'Orador',
+  receiver: 'Libras',
 };
 
 /** Aplica os rótulos padrão, permitindo sobrescrever por papel. */
