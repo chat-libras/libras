@@ -29,6 +29,7 @@ pnpm-debug.log*
 .vite/
 .cache/
 .eslintcache
+.biome/
 *.tsbuildinfo
 
 # Editores / IDEs
@@ -44,3 +45,7 @@ pnpm-debug.log*
 # Sistema operacional
 .DS_Store
 Thumbs.db
+
+/me
+.history/
+video-call/server/config/db.sqlite

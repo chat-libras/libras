@@ -1,0 +1,26 @@
+/* Lado cliente: palco do avatar do VLibras e botão de velocidade. */
+.libras-chat__avatar {
+  position: relative;
+}
+.libras-chat__stage {
+  width: 100%;
+  aspect-ratio: 4/3;
+  background: var(--libras-color-stage-bg, #111);
+  border-radius: var(--libras-radius-stage, 10px);
+}
+.libras-chat__speed {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  padding: 6px 10px;
+  font-size: 13px;
+  cursor: pointer;
+  border: none;
+  border-radius: 8px;
+  background: var(--libras-color-speed-bg, rgba(0, 0, 0, 0.6));
+  color: var(--libras-color-speed-text, #fff);
+}
+.libras-chat__speed:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

@@ -1,16 +1,44 @@
+/* ── Design tokens da lib (sobrescreva em qualquer ancestral) ───────────────── */
+:root {
+  --libras-font: system-ui, -apple-system, sans-serif;
+  --libras-color-interim: #a60;
+  --libras-color-error: crimson;
+  --libras-color-bg-log: #fff;
+  --libras-color-border: #eee;
+  --libras-color-bubble-bg: #eef1f4;
+  --libras-color-bubble-text: #000;
+  --libras-color-bubble-mine-bg: #d7ebff;
+  --libras-color-who: #888;
+  --libras-color-stage-bg: #111;
+  --libras-color-speed-bg: rgba(0, 0, 0, 0.6);
+  --libras-color-speed-text: #fff;
+  --libras-color-mic-on-bg: #ffd7d7;
+  --libras-radius-stage: 10px;
+  --libras-radius-bubble: 10px;
+  --libras-radius-log: 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .libras-chat__interim,
+  .libras-translator__overlay {
+    transition: none;
+    animation: none;
+  }
+}
+
 /* Container do chat + avisos compartilhados pelos dois lados (interim/erro).
    Sobrescreva pelas classes `libras-chat__*` ou via a prop `className`. */
 .libras-chat {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  font-family: system-ui, sans-serif;
+  font-family: var(--libras-font);
 }
 .libras-chat__interim {
-  color: #a60;
+  color: var(--libras-color-interim);
   font-size: 13px;
 }
 .libras-chat__error {
-  color: crimson;
+  color: var(--libras-color-error);
   font-size: 13px;
 }

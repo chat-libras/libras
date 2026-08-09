@@ -1,0 +1,5 @@
+node_modules/
+dist/
+config/db.sqlite
+config/db.sqlite-shm
+config/db.sqlite-wal

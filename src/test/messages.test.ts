@@ -6,18 +6,18 @@ const msg = (id: string, from: LibrasChatRole, text = 't'): LibrasChatMessage =>
 
 describe('newIncomingMessages', () => {
   it('retorna só mensagens do OUTRO lado, a partir do índice visto', () => {
-    const messages = [msg('1', 'doctor'), msg('2', 'client'), msg('3', 'doctor')];
-    expect(newIncomingMessages(messages, 'client', 0).map((m) => m.id)).toEqual(['1', '3']);
+    const messages = [msg('1', 'sender'), msg('2', 'receiver'), msg('3', 'sender')];
+    expect(newIncomingMessages(messages, 'receiver', 0).map((m) => m.id)).toEqual(['1', '3']);
   });
 
   it('ignora as já vistas (antes de `seen`)', () => {
-    const messages = [msg('1', 'doctor'), msg('2', 'doctor')];
-    expect(newIncomingMessages(messages, 'client', 1).map((m) => m.id)).toEqual(['2']);
+    const messages = [msg('1', 'sender'), msg('2', 'sender')];
+    expect(newIncomingMessages(messages, 'receiver', 1).map((m) => m.id)).toEqual(['2']);
   });
 
   it('nunca devolve as próprias mensagens', () => {
-    const messages = [msg('1', 'client'), msg('2', 'client')];
-    expect(newIncomingMessages(messages, 'client', 0)).toEqual([]);
+    const messages = [msg('1', 'receiver'), msg('2', 'receiver')];
+    expect(newIncomingMessages(messages, 'receiver', 0)).toEqual([]);
   });
 });
 
@@ -27,6 +27,6 @@ describe('resolveLabels', () => {
   });
 
   it('permite sobrescrever por papel', () => {
-    expect(resolveLabels({ client: 'Paciente' })).toEqual({ doctor: 'Médico', client: 'Paciente' });
+    expect(resolveLabels({ receiver: 'Paciente' })).toEqual({ sender: 'Orador', receiver: 'Paciente' });
   });
 });

@@ -1,3 +1,4 @@
+
 # Arquitetura — libras-translator
 
 Documento técnico para uso por modelos de IA ao fazer alterações. Complementa o CLAUDE.md (comandos e visão geral) e o README.md (uso da biblioteca).
@@ -67,7 +68,7 @@ A `VLibrasSignRenderer` resolve isso com uma fila + backpressure:
 ## Fluxo completo de uma frase até o sinal
 
 ```
-doctor fala / escreve
+participante ouvinte fala / escreve
     │
     ▼
 useLibrasTranslator / LibrasChat
@@ -170,13 +171,13 @@ O `captions.ts` é diferente: não produz `MediaStream`; em vez disso, expõe um
 
 ```
 LibrasChat
-├── DoctorSide       (role="doctor")
+├── SenderSide       (role="sender")
 │   ├── useDoctorSpeech    ← ASR + envio de texto
 │   ├── ChatLog            ← histórico de mensagens
 │   └── SendForm           ← campo de texto + botão
-└── ClientSide       (role="client")
+└── ReceiverSide       (role="receiver")
     ├── useLibrasAvatar    ← avatar VLibras (sinaliza)
-    ├── useClientSignaling ← detecta novas mensagens do médico e sinaliza
+    ├── useClientSignaling ← detecta novas mensagens e sinaliza
     ├── ChatLog
     └── SendForm
 ```
@@ -190,5 +191,5 @@ useLibrasTranslator  ← avatar + ASR
     ↑ usado por
 LibrasTranslator (componente standalone)
     ou
-ClientSide (dentro do LibrasChat)
+ReceiverSide (dentro do LibrasChat)
 ```

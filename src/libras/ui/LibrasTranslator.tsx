@@ -4,6 +4,8 @@ import {
   type UseLibrasTranslatorOptions,
   type LibrasTranslatorApi,
 } from './useLibrasTranslator';
+import { resolveStrings, type LibrasStrings } from './strings';
+import { useLibrasConfig } from './LibrasProvider';
 
 // ---------------------------------------------------------------------------
 // Componente pronto-para-usar: renderiza o avatar do VLibras traduzindo o áudio
@@ -11,9 +13,9 @@ import {
 //
 //   <LibrasTranslator
 //     audio={{ kind: 'stream', stream: remoteAudioStream }}
-//     asr={{ provider: 'deepgram', apiKey: KEY }}
+//     asr={{ provider: 'custom', factory: myASRFactory }}
 //     showCaptions
-//     controls            // botões de start/parar, velocidade e input de texto
+//     controls
 //   />
 // ---------------------------------------------------------------------------
 
@@ -39,16 +41,19 @@ export interface LibrasTranslatorProps extends UseLibrasTranslatorOptions {
    * Ligado por padrão; `false` esconde, ou um objeto escolhe quais.
    */
   controls?: LibrasControls;
+  /**
+   * Textos da UI (botões, placeholders, estados). Sobrescreva para i18n ou
+   * rebranding sem modificar o componente.
+   */
+  strings?: LibrasStrings;
 }
 
-// Ciclo de velocidade (mesma regra da demo): 1× → 2× em passos, volta ao início.
+// Ciclo de velocidade: 1× → 2× em passos de 0.25×, volta ao início.
 const SPEED_STEP = 0.25;
 const SPEED_MIN = 1;
 const SPEED_MAX = 2;
 
 function resolveControls(controls: LibrasControls | undefined) {
-  // Ligado por padrão: omitir a prop mostra todos os controles. Passe
-  // `controls={false}` para esconder, ou um objeto para escolher quais.
   if (controls === undefined || controls === true) {
     return { start: true, text: true, speed: true };
   }
@@ -56,13 +61,14 @@ function resolveControls(controls: LibrasControls | undefined) {
   return { start: !!controls.start, text: !!controls.text, speed: !!controls.speed };
 }
 
-/** Barra de controles embutida, dirigida pela API do hook. */
 function Controls({
   api,
   show,
+  s,
 }: {
   api: LibrasTranslatorApi;
   show: { start: boolean; text: boolean; speed: boolean };
+  s: Required<LibrasStrings>;
 }) {
   const [phrase, setPhrase] = useState('');
   const disabled = api.status === 'loading' || api.status === 'error';
@@ -88,11 +94,12 @@ function Controls({
             className="libras-translator__input"
             value={phrase}
             onChange={(e) => setPhrase(e.target.value)}
-            placeholder="Digitar frase…"
+            placeholder={s.captionPlaceholder}
+            aria-label={s.captionPlaceholder}
             disabled={api.status === 'loading'}
           />
           <button type="submit" disabled={api.status === 'loading'}>
-            Traduzir texto
+            {s.buttonSubmitText}
           </button>
         </form>
       )}
@@ -103,8 +110,9 @@ function Controls({
             className="libras-translator__btn"
             onClick={api.listening ? api.stop : api.start}
             disabled={disabled}
+            aria-pressed={api.listening}
           >
-            {api.listening ? '⏹ Parar' : '▶ Traduzir'}
+            {api.listening ? s.buttonStop : s.buttonTranslate}
           </button>
         )}
         {show.speed && (
@@ -112,7 +120,8 @@ function Controls({
             className="libras-translator__btn"
             onClick={nextSpeed}
             disabled={disabled}
-            title="Ajustar a velocidade do avatar"
+            title={s.buttonSpeedLabel}
+            aria-label={`${s.buttonSpeedLabel} — ${api.speed.toFixed(2)}×`}
           >
             ⏩ {api.speed.toFixed(2)}×
           </button>
@@ -127,29 +136,41 @@ export function LibrasTranslator({
   style,
   showCaptions,
   controls,
+  strings: stringsProp,
   ...options
 }: LibrasTranslatorProps) {
+  const ctx = useLibrasConfig();
+  const s = resolveStrings({ ...ctx.strings, ...stringsProp });
   const libras = useLibrasTranslator(options);
   const show = resolveControls(controls);
   const hasControls = show.start || show.text || show.speed;
 
   return (
     <div className={`libras-translator ${className ?? ''}`} style={style}>
-      <div ref={libras.containerRef} className="libras-translator__stage" />
+      <div
+        ref={libras.containerRef}
+        className="libras-translator__stage"
+        role="img"
+        aria-label={s.avatarAriaLabel}
+      />
 
       {libras.status === 'loading' && (
-        <div className="libras-translator__overlay">Carregando avatar…</div>
+        <div className="libras-translator__overlay" aria-live="polite">
+          {s.avatarLoading}
+        </div>
       )}
       {libras.status === 'error' && (
-        <div className="libras-translator__overlay libras-translator__overlay--error">
+        <div className="libras-translator__overlay libras-translator__overlay--error" role="alert">
           {libras.error}
         </div>
       )}
       {showCaptions && libras.interim && (
-        <div className="libras-translator__caption">{libras.interim}</div>
+        <div className="libras-translator__caption" aria-live="polite">
+          {libras.interim}
+        </div>
       )}
 
-      {hasControls && <Controls api={libras} show={show} />}
+      {hasControls && <Controls api={libras} show={show} s={s} />}
     </div>
   );
 }

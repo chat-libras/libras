@@ -1,6 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { createVLibrasPlayer, type VLibrasLoaderOptions } from '../core/vlibras-loader';
+import { useCallback, useRef, useState } from 'react';
+import { createVLibrasPlayer, resetVLibrasPlayer, type VLibrasLoaderOptions } from '../core/vlibras-loader';
 import { VLibrasSignRenderer } from '../core/vlibras-renderer';
+import type { SignRenderer } from '../core/sign-renderer';
+import { useLibrasConfig } from './LibrasProvider';
 
 // ---------------------------------------------------------------------------
 // Hook enxuto do AVATAR: monta o player do VLibras num container e sinaliza um
@@ -27,8 +29,8 @@ export interface UseLibrasAvatarOptions {
 }
 
 export interface LibrasAvatarApi {
-  /** Anexe a um <div> onde o avatar será renderizado. */
-  containerRef: React.RefObject<HTMLDivElement>;
+  /** Anexe a um <div> onde o avatar será renderizado (callback ref ou ref object). */
+  containerRef: React.RefCallback<HTMLDivElement>;
   status: LibrasAvatarStatus;
   error: string | null;
   /** Sinaliza um texto (enfileira; frases não se atropelam). */
@@ -37,6 +39,8 @@ export interface LibrasAvatarApi {
   speed: number;
   /** Ajusta a velocidade da sinalização ao vivo. */
   setSpeed: (speed: number) => void;
+  /** Renderer interno — use para integrar com LibrasObserver (uso avançado). */
+  renderer: SignRenderer | null;
 }
 
 // Singleton: o Unity/WebGL do VLibras é pesado e só deve existir uma vez
@@ -44,9 +48,9 @@ export interface LibrasAvatarApi {
 let rendererSingleton: VLibrasSignRenderer | null = null;
 
 export function useLibrasAvatar(options: UseLibrasAvatarOptions = {}): LibrasAvatarApi {
-  const { vlibras, speed: initialSpeed = 1, onReady } = options;
+  const ctx = useLibrasConfig();
+  const { vlibras = ctx.vlibras, speed: initialSpeed = 1, onReady } = options;
 
-  const containerRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<LibrasAvatarStatus>('loading');
   const [error, setError] = useState<string | null>(null);
   const [speed, setSpeedState] = useState(initialSpeed);
@@ -63,35 +67,33 @@ export function useLibrasAvatar(options: UseLibrasAvatarOptions = {}): LibrasAva
     rendererSingleton?.play(text);
   }, []);
 
-  // Carrega o avatar do VLibras uma única vez.
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    let disposed = false;
+  const loadStartedRef = useRef(false);
 
-    createVLibrasPlayer(container, vlibras)
+  const attachContainer = useCallback((el: HTMLDivElement | null) => {
+    if (!el) {
+      loadStartedRef.current = false;
+      rendererSingleton = null;
+      resetVLibrasPlayer();
+      setStatus('loading');
+      return;
+    }
+    if (loadStartedRef.current) return;
+    loadStartedRef.current = true;
+
+    createVLibrasPlayer(el, vlibras)
       .then((player) => {
-        if (disposed) return;
-        if (!rendererSingleton) {
-          rendererSingleton = new VLibrasSignRenderer(player, { settleMs: 250 });
-        }
+        rendererSingleton = new VLibrasSignRenderer(player, { settleMs: 250 });
         rendererSingleton.setSpeed(speed);
         rendererSingleton.clear();
         setStatus('ready');
         onReadyRef.current?.();
       })
       .catch((e) => {
-        if (!disposed) {
-          setError(String(e?.message ?? e));
-          setStatus('error');
-        }
+        setError(String(e?.message ?? e));
+        setStatus('error');
       });
-
-    return () => {
-      disposed = true;
-    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return { containerRef, status, error, translate, speed, setSpeed };
+  return { containerRef: attachContainer, status, error, translate, speed, setSpeed, renderer: rendererSingleton };
 }
