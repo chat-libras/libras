@@ -48,13 +48,13 @@ export const useControlsStore = create<ControlsState>()(
     toggleChat: () => set((s) => {
       const next = !s.isChatOpen;
       debugBus.emit('toggle', 'chat:toggle', { open: next });
-      return { isChatOpen: next, isDebugOpen: next ? false : s.isDebugOpen };
+      return { isChatOpen: next, };
     }),
 
     toggleDebug: () => set((s) => {
       const next = !s.isDebugOpen;
       debugBus.emit('toggle', 'debug:toggle', { open: next });
-      return { isDebugOpen: next, isChatOpen: next ? false : s.isChatOpen };
+      return { isDebugOpen: next,  };
     }),
 
     resetControls: () => set(INITIAL_STATE),

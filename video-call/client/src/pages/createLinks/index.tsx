@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { CreateLinkForm } from './components/createLinkForm/index.ts';
 import { LinkCard } from './components/linkCard/index.ts';
 import * as S from './styles.ts';
@@ -11,10 +10,7 @@ interface CreateLinksPageProps {
 }
 
 export function CreateLinksPage({ room }: CreateLinksPageProps) {
-  const navigate = useNavigate();
   const [links, setLinks] = useState<CallLinkModel[]>([]);
-
-  const handleOpen = (link: CallLinkModel) => navigate(`/sala/${link.roomId}/${link.id}`);
 
   const patientLinks      = links.filter((l) => l.role === 'PATIENT');
   const professionalLinks = links.filter((l) => l.role === 'HEALTH_PROFESSIONAL');
@@ -33,7 +29,7 @@ export function CreateLinksPage({ room }: CreateLinksPageProps) {
           <S.Panel>
             <CreateLinkForm roomId={room.id} role="PATIENT" onCreated={(l) => setLinks((p) => [...p, l])} />
             <S.LinkList>
-              {patientLinks.map((l) => <LinkCard key={l.id} link={l} onOpen={() => handleOpen(l)} />)}
+              {patientLinks.map((l) => <LinkCard key={l.id} link={l} />)}
             </S.LinkList>
           </S.Panel>
 
@@ -42,7 +38,7 @@ export function CreateLinksPage({ room }: CreateLinksPageProps) {
           <S.Panel>
             <CreateLinkForm roomId={room.id} role="HEALTH_PROFESSIONAL" onCreated={(l) => setLinks((p) => [...p, l])} />
             <S.LinkList>
-              {professionalLinks.map((l) => <LinkCard key={l.id} link={l} onOpen={() => handleOpen(l)} />)}
+              {professionalLinks.map((l) => <LinkCard key={l.id} link={l} />)}
             </S.LinkList>
           </S.Panel>
         </S.Panels>

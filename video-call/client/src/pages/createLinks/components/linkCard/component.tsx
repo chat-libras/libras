@@ -3,7 +3,7 @@ import { ROLE_LABELS } from '../../types/roles.types.ts';
 import * as S from './styles.ts';
 import type { LinkCardProps } from './component.types.ts';
 
-export function LinkCard({ link, onOpen }: LinkCardProps) {
+export function LinkCard({ link }: LinkCardProps) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = () => {
@@ -23,9 +23,9 @@ export function LinkCard({ link, onOpen }: LinkCardProps) {
         <S.ActionBtn onClick={handleCopy} title="Copiar link">
           <span className="material-icons">{copied ? 'check' : 'content_copy'}</span>
         </S.ActionBtn>
-        <S.ActionBtn $primary onClick={onOpen} title="Abrir chamada">
+        <S.OpenLink href={link.accessUrl} target="_blank" rel="noreferrer" title="Abrir chamada">
           <span className="material-icons">videocam</span>
-        </S.ActionBtn>
+        </S.OpenLink>
       </S.Actions>
     </S.Card>
   );

@@ -2,5 +2,4 @@ import type { CallLinkModel } from '../../../../modules/call-link/call-link.mode
 
 export interface LinkCardProps {
   link: CallLinkModel;
-  onOpen: () => void;
 }

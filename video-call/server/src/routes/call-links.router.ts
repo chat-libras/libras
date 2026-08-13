@@ -9,8 +9,8 @@ import { findRoomById } from '../modules/room/room.service.ts';
 
 export const callLinksRouter = Router();
 
-function getBaseUrl(req: import('express').Request): string {
-  return `${req.protocol}://${req.get('host')}`;
+function getBaseUrl(_req: import('express').Request): string {
+  return process.env['CLIENT_URL'] ?? 'http://localhost:5173';
 }
 
 /**

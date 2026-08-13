@@ -37,6 +37,27 @@ export const Actions = styled.div`
   flex-shrink: 0;
 `;
 
+export const OpenLink = styled.a`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: #1d4ed8;
+  border: 1px solid #2563eb;
+  border-radius: 6px;
+  color: #fff;
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.15s;
+
+  &:hover {
+    background: #2563eb;
+  }
+
+  .material-icons { font-size: 16px; }
+`;
+
 export const ActionBtn = styled.button<{ $primary?: boolean }>`
   display: flex;
   align-items: center;
