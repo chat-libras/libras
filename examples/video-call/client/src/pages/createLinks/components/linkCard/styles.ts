@@ -4,8 +4,8 @@ export const Card = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #0f172a;
-  border: 1px solid #334155;
+  background: ${({ theme }) => theme.bg.primary};
+  border: 1px solid ${({ theme }) => theme.border};
   border-radius: 8px;
   padding: 10px 12px;
   gap: 8px;
@@ -20,12 +20,12 @@ export const Info = styled.div`
 
 export const Role = styled.span`
   font-size: 11px;
-  color: #64748b;
+  color: ${({ theme }) => theme.text.muted};
 `;
 
 export const Name = styled.span`
   font-size: 14px;
-  color: #f1f5f9;
+  color: ${({ theme }) => theme.text.primary};
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -43,16 +43,16 @@ export const ActionBtn = styled.button<{ $primary?: boolean }>`
   justify-content: center;
   width: 32px;
   height: 32px;
-  background: ${({ $primary }) => ($primary ? '#1d4ed8' : '#1e293b')};
-  border: 1px solid ${({ $primary }) => ($primary ? '#2563eb' : '#334155')};
+  background: ${({ $primary, theme }) => ($primary ? theme.btn.active.bg : theme.bg.secondary)};
+  border: 1px solid ${({ $primary, theme }) => ($primary ? theme.btn.active.hover : theme.border)};
   border-radius: 6px;
-  color: ${({ $primary }) => ($primary ? '#fff' : '#94a3b8')};
+  color: ${({ $primary, theme }) => ($primary ? '#fff' : theme.text.secondary)};
   cursor: pointer;
   transition: all 0.15s;
 
   &:hover {
-    background: ${({ $primary }) => ($primary ? '#2563eb' : '#334155')};
-    color: #f1f5f9;
+    background: ${({ $primary, theme }) => ($primary ? theme.btn.active.hover : theme.bg.tertiary)};
+    color: ${({ theme }) => theme.text.primary};
   }
 
   .material-icons { font-size: 16px; }

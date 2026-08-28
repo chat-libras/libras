@@ -12,8 +12,8 @@ export const Header = styled.header`
   justify-content: space-between;
   padding: 0 16px;
   height: 48px;
-  background: #1e293b;
-  border-bottom: 1px solid #334155;
+  background: ${({ theme }) => theme.bg.secondary};
+  border-bottom: 1px solid ${({ theme }) => theme.border};
   flex-shrink: 0;
 `;
 

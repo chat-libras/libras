@@ -34,12 +34,38 @@ export function CallScreen({ params, onLeave }: CallScreenProps) {
   } = useControlsStore();
 
   const chat   = useChat(ws, params.peerId, params.roomId);
+
+  // Pega o primeiro stream remoto (áudio da outra pessoa na chamada)
+  const firstRemotePeer = peers.length > 0 ? peers[0] : null;
+  const remoteAudioStream = firstRemotePeer
+    ? remoteStreams.get(firstRemotePeer.id) ?? null
+    : null;
+  const remoteMicOn = firstRemotePeer
+    ? (peerMediaState.get(firstRemotePeer.id)?.micOn ?? true)
+    : false;
+
+  const deepgramKey = import.meta.env['VITE_DEEPGRAM_KEY'] as string | undefined;
+  const useRemoteStream = !!remoteAudioStream && !!deepgramKey;
+
   const libras = useLibrasTranslator({
-    audio: { kind: 'microphone' },
-    asr: { provider: 'webspeech', lang: 'pt-BR' },
-    autoStart: true,
+    audio: useRemoteStream
+      ? { kind: 'stream', stream: remoteAudioStream }
+      : { kind: 'microphone' },
+    asr: useRemoteStream
+      ? { provider: 'deepgram', apiKey: deepgramKey!, lang: 'pt-BR' }
+      : { provider: 'webspeech', lang: 'pt-BR' },
+    autoStart: false,
     speed: 1.3,
   });
+
+  // Start/stop libras — só escuta se o mic remoto estiver ativo
+  useEffect(() => {
+    if (isLibrasOpen && remoteMicOn) {
+      libras.start?.();
+    } else {
+      libras.stop?.();
+    }
+  }, [isLibrasOpen, remoteMicOn]);
   const { debugMode } = getClientEnv();
   const { theme, toggleTheme } = useAppTheme();
 

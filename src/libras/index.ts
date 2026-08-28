@@ -60,11 +60,11 @@ export type { AudioSource, ASROptions } from './core/asr/phrase-source';
 export type {
   CloudASR,
   CloudASRCallbacks,
-  ASRFactory,
+  CloudASRConfig,
 } from './core/asr/cloud-asr';
-export { withWebSpeechFallback } from './core/asr/with-webspeech-fallback';
+export { createCloudASR } from './core/asr/cloud-asr';
 
-// ── Adapters de plataforma (VideoParticipant genérico, WebRTC, legendas/Teams)
+// ── Adapters de plataforma (Vonage, WebRTC, legendas/Teams)
 export * from './adapters';
 
 // ── Núcleo (uso avançado / integração não-React) ─────────────────────────────

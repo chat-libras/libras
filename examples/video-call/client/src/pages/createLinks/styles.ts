@@ -6,11 +6,12 @@ export const Wrapper = styled.div`
   align-items: flex-start;
   justify-content: center;
   padding: 32px 16px;
+  background: ${({ theme }) => theme.bg.primary};
 `;
 
 export const Card = styled.div`
-  background: #1e293b;
-  border: 1px solid #334155;
+  background: ${({ theme }) => theme.bg.secondary};
+  border: 1px solid ${({ theme }) => theme.border};
   border-radius: 12px;
   padding: 32px 28px;
   width: 100%;
@@ -27,13 +28,14 @@ export const HeaderRow = styled.div`
 export const Title = styled.h1`
   font-size: 22px;
   font-weight: 700;
+  color: ${({ theme }) => theme.text.primary};
   margin-bottom: 4px;
 `;
 
 export const SessionId = styled.p`
   font-family: monospace;
   font-size: 12px;
-  color: #64748b;
+  color: ${({ theme }) => theme.text.muted};
 `;
 
 export const Panels = styled.div`
@@ -50,7 +52,7 @@ export const Panel = styled.div`
 
 export const Divider = styled.div`
   flex: 0 0 1px;
-  background: #334155;
+  background: ${({ theme }) => theme.border};
   margin: 0 20px;
 `;
 

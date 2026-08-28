@@ -1,16 +1,12 @@
 import { createSpeechRecognizer } from './webspeech';
-import type { CloudASR, ASRFactory } from './cloud-asr';
+import { createCloudASR, type CloudASR, type CloudASRConfig } from './cloud-asr';
 
 // ---------------------------------------------------------------------------
 // Fonte de frases: abstrai "de onde vem o áudio" e "qual ASR usar", entregando
 // frases finais (deduplicadas) prontas para sinalizar.
 //
-// Regra: a Web Speech API (grátis) SÓ ouve o microfone. Áudio de uma chamada
-// (MediaStream de WebRTC/vídeo) exige ASR de nuvem via 'custom' factory.
-//
-// Para usar um ASR de nuvem, implemente ASRFactory e passe via 'custom':
-//   const myFactory: ASRFactory = (cb) => ({ start, stop });
-//   asr={{ provider: 'custom', factory: myFactory }}
+// Regra fundamental: a Web Speech API (grátis) SÓ ouve o microfone. Áudio de
+// uma chamada de vídeo (MediaStream de um <video>/WebRTC) exige ASR de nuvem.
 // ---------------------------------------------------------------------------
 
 /** De onde vem o áudio a traduzir. */
@@ -18,11 +14,10 @@ export type AudioSource =
   | { kind: 'microphone' }
   | { kind: 'stream'; stream: MediaStream };
 
-/** Qual motor de reconhecimento de fala usar. */
+/** Qual motor de reconhecimento de fala. */
 export type ASROptions =
   | { provider: 'webspeech'; lang?: string }
-  /** Provedor customizado: injete qualquer implementação de CloudASR via factory. */
-  | { provider: 'custom'; factory: ASRFactory };
+  | { provider: 'deepgram'; apiKey: string; lang?: string };
 
 export interface PhraseCallbacks {
   /** Frase final (deduplicada) pronta para sinalizar. */
@@ -67,8 +62,7 @@ export function createPhraseSource(
       return {
         async start() {
           cb.onError?.(
-            'Web Speech API só ouve o microfone. Para áudio de chamada, ' +
-              'use { provider: "custom", factory } com um ASR de nuvem.'
+            'Web Speech API só ouve o microfone. Para áudio de chamada, use um provedor de nuvem (ex.: Deepgram).'
           );
         },
         stop() {},
@@ -97,7 +91,7 @@ export function createPhraseSource(
     };
   }
 
-  // ---- ASR customizado via factory (agnóstico de provedor) ----
+  // ---- ASR de nuvem (microfone OU stream de chamada) ----
   let instance: CloudASR | null = null;
   let ownedStream: MediaStream | null = null;
   return {
@@ -109,7 +103,12 @@ export function createPhraseSource(
         ownedStream = await navigator.mediaDevices.getUserMedia({ audio: true });
         stream = ownedStream;
       }
-      instance = asr.factory({
+      const config: CloudASRConfig = {
+        provider: 'deepgram',
+        apiKey: asr.apiKey,
+        lang: asr.lang ?? 'pt-BR',
+      };
+      instance = createCloudASR(config, {
         onTranscript: (text, final) => {
           cb.onInterim?.(text);
           if (final) emit(text);

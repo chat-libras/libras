@@ -5,11 +5,12 @@ export const Wrapper = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
+  background: ${({ theme }) => theme.bg.primary};
 `;
 
 export const Card = styled.div`
-  background: #1e293b;
-  border: 1px solid #334155;
+  background: ${({ theme }) => theme.bg.secondary};
+  border: 1px solid ${({ theme }) => theme.border};
   border-radius: 12px;
   padding: 32px 28px;
   width: 100%;
@@ -19,11 +20,12 @@ export const Card = styled.div`
 export const Title = styled.h1`
   font-size: 22px;
   font-weight: 700;
+  color: ${({ theme }) => theme.text.primary};
   margin-bottom: 4px;
 `;
 
 export const Subtitle = styled.p`
-  color: #64748b;
+  color: ${({ theme }) => theme.text.muted};
   font-size: 13px;
   margin-bottom: 24px;
 `;
@@ -35,7 +37,7 @@ export const Section = styled.div`
 `;
 
 export const Desc = styled.p`
-  color: #94a3b8;
+  color: ${({ theme }) => theme.text.secondary};
   font-size: 14px;
   line-height: 1.6;
 `;

@@ -9,6 +9,6 @@ export const Wrap = styled.div`
 export const FormTitle = styled.h3`
   font-size: 14px;
   font-weight: 600;
-  color: #94a3b8;
+  color: ${({ theme }) => theme.text.secondary};
   margin-bottom: 4px;
 `;

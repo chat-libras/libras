@@ -5,22 +5,22 @@ import styled from 'styled-components';
 export const PageInput = styled.input`
   width: 100%;
   padding: 10px 12px;
-  background: #0f172a;
-  border: 1px solid #334155;
+  background: ${({ theme }) => theme.bg.primary};
+  border: 1px solid ${({ theme }) => theme.border};
   border-radius: 8px;
-  color: #f1f5f9;
+  color: ${({ theme }) => theme.text.primary};
   font-size: 14px;
   outline: none;
   transition: border-color 0.15s;
 
-  &::placeholder { color: #64748b; }
-  &:focus { border-color: #3b82f6; }
+  &::placeholder { color: ${({ theme }) => theme.text.muted}; }
+  &:focus { border-color: ${({ theme }) => theme.btn.active.bg}; }
 `;
 
 export const PageButton = styled.button<{ $sm?: boolean }>`
   width: 100%;
   padding: ${({ $sm }) => ($sm ? '8px 14px' : '12px')};
-  background: #2563eb;
+  background: ${({ theme }) => theme.btn.active.bg};
   border: none;
   border-radius: 8px;
   color: #fff;
@@ -29,8 +29,8 @@ export const PageButton = styled.button<{ $sm?: boolean }>`
   cursor: pointer;
   transition: background 0.15s;
 
-  &:hover:not(:disabled) { background: #1d4ed8; }
-  &:disabled { background: #334155; cursor: not-allowed; }
+  &:hover:not(:disabled) { background: ${({ theme }) => theme.btn.active.hover}; }
+  &:disabled { background: ${({ theme }) => theme.border}; cursor: not-allowed; }
 `;
 
 export const PageErrorText = styled.p`
