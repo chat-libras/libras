@@ -2,7 +2,7 @@
 
 ## Requisitos
 
-| Requisito | Versao minima | Observacao |
+| Requisito | Versão mínima | Observação |
 |-----------|---------------|------------|
 | Node.js | 18 LTS | Server do video-call exige ≥22 (better-sqlite3@13) |
 | React | 18 | |
@@ -19,26 +19,26 @@ cd libras
 npm install
 ```
 
-## 2. Rodar a demo (forma mais rapida de ver funcionando)
+## 2. Rodar a demo (forma mais rápida de ver funcionando)
 
 ```bash
 npm run dev
 # → http://localhost:5173
 ```
 
-Abra no **Chrome**. A demo simula uma videochamada com dois participantes — um que fala e outro que vê em Libras — na mesma tela, ligados por um canal em memoria — sem backend.
+Abra no **Chrome**. A demo simula uma videochamada com dois participantes — um que fala e outro que vê em Libras — na mesma tela, ligados por um canal em memória — sem backend.
 
 O que testar:
 
 1. Clique em **Falar** no painel do orador → fale em pt-BR → o avatar sinaliza no painel do participante surdo.
 2. Ou escreva uma mensagem no campo de texto do chat do orador → mesmo efeito.
-3. Responda pelo painel do participante surdo → aparece no historico da outra parte.
+3. Responda pelo painel do participante surdo → aparece no histórico da outra parte.
 
 > O avatar leva alguns segundos para carregar na primeira vez (WASM ~13 MB via CDN).
 
 ## 3. Rodar o projeto de videochamada real
 
-O projeto `examples/video-call/` e uma chamada WebRTC mesh completa com backend Express + SQLite.
+O projeto `examples/video-call/` é uma chamada WebRTC mesh completa com backend Express + SQLite.
 
 **Requisito adicional:** Node.js ≥ 22 e Yarn.
 
@@ -70,17 +70,17 @@ yarn dev
 
 O que testar:
 
-1. Acesse `http://localhost:5174` → crie uma sessao.
+1. Acesse `http://localhost:5174` → crie uma sessão.
 2. Copie os links dos participantes.
-3. Abra cada link em uma aba (ou maquina) separada.
+3. Abra cada link em uma aba (ou máquina) separada.
 4. Clique em **Libras** → o avatar carrega.
 5. Fale no painel do orador → o avatar sinaliza no painel do participante surdo.
 
-## 4. Adicionar ao seu proprio app
+## 4. Adicionar ao seu próprio app
 
-O pacote ainda nao esta publicado no npm. Copie a pasta `src/libras/` para o seu projeto e importe pelo caminho relativo. Quando publicado, sera `import ... from 'libras-translator'`.
+O pacote ainda não está publicado no npm. Copie a pasta `src/libras/` para o seu projeto e importe pelo caminho relativo. Quando publicado, será `import ... from 'libras-translator'`.
 
-### Exemplo minimo — avatar sinaliza texto
+### Exemplo mínimo — avatar sinaliza texto
 
 ```tsx
 import { useLibrasAvatar } from 'libras-translator';
@@ -101,7 +101,7 @@ function Avatar({ texto }: { texto: string }) {
 }
 ```
 
-### Exemplo com microfone (Web Speech, gratis)
+### Exemplo com microfone (Web Speech, grátis)
 
 ```tsx
 import { LibrasTranslator } from 'libras-translator';
@@ -150,20 +150,20 @@ function Chamada() {
 }
 ```
 
-Em producao, cada `<LibrasChat>` roda em uma maquina diferente. O `messages` de um lado chega via transporte (WebSocket, Firebase, etc.) para o outro.
+Em produção, cada `<LibrasChat>` roda em uma máquina diferente. O `messages` de um lado chega via transporte (WebSocket, Firebase, etc.) para o outro.
 
 ### Servir os assets do VLibras
 
-O player Unity precisa dos arquivos em `public/vlibras/`. Copie a pasta `public/vlibras/` do repositorio para o `public/` do seu projeto (Vite, CRA, Next.js public assets).
+O player Unity precisa dos arquivos em `public/vlibras/`. Copie a pasta `public/vlibras/` do repositório para o `public/` do seu projeto (Vite, CRA, Next.js public assets).
 
-Para hospedar em CDN proprio ou usar offline, veja [docs/vlibras-setup.md](../vlibras-setup.md).
+Para hospedar em CDN próprio ou usar offline, veja [docs/vlibras-setup.md](../vlibras-setup.md).
 
-## 5. Proximos passos
+## 5. Próximos passos
 
-| Topico | Guia |
+| Tópico | Guia |
 |--------|------|
 | Configurar ASR (Deepgram, customizado, fallback) | [docs/guides/asr.md](asr.md) |
 | Integrar com Vonage, Daily, Jitsi, WebRTC puro | [docs/guides/video-call-adapters.md](video-call-adapters.md) |
-| Tematizacao, i18n, acessibilidade | [docs/guides/customization.md](customization.md) |
-| Referencia completa de props e tipos | [docs/api.md](../api.md) |
+| Tematização, i18n, acessibilidade | [docs/guides/customization.md](customization.md) |
+| Referência completa de props e tipos | [docs/api.md](../api.md) |
 | Hospedar assets VLibras offline | [docs/vlibras-setup.md](../vlibras-setup.md) |
