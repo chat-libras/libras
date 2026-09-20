@@ -1,10 +1,10 @@
-# Customizacao
+# Customização
 
 ## Avatar
 
-### Selecao de avatar
+### Seleção de avatar
 
-O VLibras oferece mais de um avatar. O padrao e Icaro (masculino). Para usar Hozana (feminino):
+O VLibras oferece mais de um avatar. O padrão é Ícaro (masculino). Para usar Hozana (feminino):
 
 ```tsx
 import { LibrasTranslator } from 'libras-translator';
@@ -25,9 +25,9 @@ import { LibrasProvider } from 'libras-translator';
 </LibrasProvider>
 ```
 
-O `avatar` e uma string passada diretamente para o player VLibras. Os valores confirmados sao `'icaro'` e `'hozana'`; outros avatares do VLibras podem funcionar se o bundle os suportar.
+O `avatar` é uma string passada diretamente para o player VLibras. Os valores confirmados são `'icaro'` e `'hozana'`; outros avatares do VLibras podem funcionar se o bundle os suportar.
 
-## Velocidade de sinalizacao
+## Velocidade de sinalização
 
 ### Via prop
 
@@ -36,7 +36,7 @@ O `avatar` e uma string passada diretamente para o player VLibras. Os valores co
 <LibrasChat speed={1.3} role="receiver" messages={[]} onSend={() => {}} />
 ```
 
-O `speed` padrao nos componentes de chat e `1.3`. Em `<LibrasTranslator>` o padrao e `1`.
+O `speed` padrão nos componentes de chat é `1.3`. Em `<LibrasTranslator>` o padrão é `1`.
 
 ### Via hook
 
@@ -62,9 +62,9 @@ function MeuAvatar() {
 }
 ```
 
-## Tematizacao com CSS
+## Tematização com CSS
 
-Os componentes renderizam elementos HTML semanticos com classes CSS. Voce pode sobrescrever estilos diretamente:
+Os componentes renderizam elementos HTML semânticos com classes CSS. Você pode sobrescrever estilos diretamente:
 
 ```css
 /* sobrescrever cor e borda do container do avatar */
@@ -89,11 +89,11 @@ Os componentes renderizam elementos HTML semanticos com classes CSS. Voce pode s
 }
 ```
 
-> **Variaveis CSS planejadas:** a proxima versao expora variaveis CSS (`--libras-avatar-bg`, `--libras-control-color`, etc.) para tematizacao sem sobrescrever seletores internos. Por ora, use os seletores acima ou passe `className` e `style` para os componentes.
+> **Variáveis CSS planejadas:** a próxima versão exporá variáveis CSS (`--libras-avatar-bg`, `--libras-control-color`, etc.) para tematização sem sobrescrever seletores internos. Por ora, use os seletores acima ou passe `className` e `style` para os componentes.
 
 ### Via `className` e `style`
 
-Todos os componentes aceitam `className` e `style` que sao aplicados ao elemento raiz:
+Todos os componentes aceitam `className` e `style` que são aplicados ao elemento raiz:
 
 ```tsx
 <LibrasTranslator
@@ -105,7 +105,7 @@ Todos os componentes aceitam `className` e `style` que sao aplicados ao elemento
 
 ## Strings e i18n
 
-Todas as strings visiveis ao usuario podem ser substituidas. Use `LibrasStrings` para adaptar o idioma ou o vocabulario de cada contexto.
+Todas as strings visíveis ao usuário podem ser substituidas. Use `LibrasStrings` para adaptar o idioma ou o vocabulário de cada contexto.
 
 ### Via `<LibrasProvider>` (global)
 
@@ -129,7 +129,7 @@ import { LibrasProvider, DEFAULT_STRINGS } from 'libras-translator';
 </LibrasProvider>
 ```
 
-### Via prop (componente especifico)
+### Via prop (componente específico)
 
 ```tsx
 <LibrasChat
@@ -143,23 +143,23 @@ import { LibrasProvider, DEFAULT_STRINGS } from 'libras-translator';
 />
 ```
 
-### Referencia de todas as strings
+### Referência de todas as strings
 
-| Chave | Descricao | Default |
+| Chave | Descrição | Default |
 |-------|-----------|---------|
 | `avatarLoading` | Texto exibido enquanto o avatar carrega | `'Carregando avatar...'` |
-| `captionPlaceholder` | Placeholder na area de legenda | `'Aguardando fala...'` |
-| `buttonTranslate` | Botao de iniciar ASR | `'Traduzir'` |
-| `buttonStop` | Botao de parar ASR | `'Parar'` |
-| `buttonSubmitText` | Botao de enviar texto manual | `'Sinalizar'` |
+| `captionPlaceholder` | Placeholder na área de legenda | `'Aguardando fala...'` |
+| `buttonTranslate` | Botão de iniciar ASR | `'Traduzir'` |
+| `buttonStop` | Botão de parar ASR | `'Parar'` |
+| `buttonSubmitText` | Botão de enviar texto manual | `'Sinalizar'` |
 | `buttonSpeedLabel` | Label do controle de velocidade | `'Velocidade'` |
-| `chatSendButton` | Botao de enviar no chat | `'Enviar'` |
+| `chatSendButton` | Botão de enviar no chat | `'Enviar'` |
 | `chatSenderPlaceholder` | Placeholder no campo do participante ouvinte (role='sender') | `'Digite ou fale...'` |
 | `chatReceiverPlaceholder` | Placeholder no campo do participante surdo (role='receiver') | `'Digite sua resposta...'` |
-| `chatMicStart` | Tooltip/label do botao de microfone (inativo) | `'Microfone'` |
-| `chatMicStop` | Tooltip/label do botao de microfone (ativo) | `'Parar microfone'` |
+| `chatMicStart` | Tooltip/label do botão de microfone (inativo) | `'Microfone'` |
+| `chatMicStop` | Tooltip/label do botão de microfone (ativo) | `'Parar microfone'` |
 
-Os defaults estao em `DEFAULT_STRINGS` (exportado de `'libras-translator'`).
+Os defaults estão em `DEFAULT_STRINGS` (exportado de `'libras-translator'`).
 
 ## Acessibilidade
 
@@ -172,7 +172,7 @@ interface A11yOptions {
 }
 ```
 
-O valor padrao de `avatarLabel` e `"Avatar de Libras"`. O `respectReducedMotion` e `true` por padrao — se o usuario configurou o sistema para reduzir movimento, as animacoes do avatar sao pausadas.
+O valor padrão de `avatarLabel` é `"Avatar de Libras"`. O `respectReducedMotion` é `true` por padrão — se o usuário configurou o sistema para reduzir movimento, as animações do avatar são pausadas.
 
 ```tsx
 <LibrasProvider
@@ -200,7 +200,7 @@ Ou diretamente no componente:
 
 ## Visibilidade dos controles
 
-`<LibrasTranslator>` exibe por padrao tres controles: botao de iniciar/parar ASR, slider de velocidade e campo de texto para envio manual.
+`<LibrasTranslator>` exibe por padrão três controles: botão de iniciar/parar ASR, slider de velocidade e campo de texto para envio manual.
 
 ### Esconder todos
 
@@ -222,13 +222,13 @@ Ou diretamente no componente:
 
 | Chave | O que controla |
 |-------|---------------|
-| `start` | Botao de iniciar/parar a escuta |
-| `speed` | Slider de velocidade de sinalizacao |
+| `start` | Botão de iniciar/parar a escuta |
+| `speed` | Slider de velocidade de sinalização |
 | `text` | Campo de texto para envio manual (sem ASR) |
 
-## `<LibrasProvider>` como ponto unico de configuracao
+## `<LibrasProvider>` como ponto único de configuração
 
-Se voce usa multiplos componentes do plugin no mesmo app, `<LibrasProvider>` evita repetir as mesmas props em cada instancia:
+Se você usa múltiplos componentes do plugin no mesmo app, `<LibrasProvider>` evita repetir as mesmas props em cada instância:
 
 ```tsx
 import { LibrasProvider } from 'libras-translator';
@@ -255,4 +255,4 @@ function App() {
 }
 ```
 
-Props passadas diretamente a um componente sempre tem prioridade sobre o provider.
+Props passadas diretamente a um componente sempre têm prioridade sobre o provider.
