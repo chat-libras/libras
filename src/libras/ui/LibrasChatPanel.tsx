@@ -5,28 +5,6 @@ import type { AudioSource, ASROptions } from '../core/asr/phrase-source';
 import type { VLibrasLoaderOptions } from '../core/vlibras-loader';
 import type { LibrasStrings } from './strings';
 
-// ---------------------------------------------------------------------------
-// <LibrasChatPanel> — componente drop-in que envolve <LibrasChat> com estado
-// interno de mensagens. Ideal para quem não quer gerenciar mensagens no pai.
-//
-// Casos de uso: aulas online, atendimento ao cliente, triagem hospitalar —
-// qualquer cenário onde um lado é surdo e precisa do avatar + chat prontos.
-//
-// Diferença de <LibrasChat>:
-//   - <LibrasChat>    → controlado: o pai gerencia messages[] e onSend
-//   - <LibrasChatPanel> → autogerenciado: estado interno; basta passar
-//     incomingMessage (string) e onMessage (callback do transporte)
-//
-// Integração com transporte (WebSocket, socket.io, Firebase, etc.):
-//   const [incoming, setIncoming] = useState('');
-//   socket.on('mensagem', setIncoming);
-//
-//   <LibrasChatPanel
-//     role="listener"
-//     incomingMessage={incoming}
-//     onMessage={(text) => socket.emit('mensagem', text)}
-//   />
-// ---------------------------------------------------------------------------
 
 export type LibrasChatPanelRole = 'speaker' | 'listener';
 
@@ -95,9 +73,8 @@ export function LibrasChatPanel({
   const [messages, setMessages] = useState<LibrasChatMessage[]>([]);
   const prevIncoming = useRef<string | undefined>(undefined);
 
-  // Mapeamento de roles: speaker → sender (capta áudio), listener → receiver (vê avatar)
+  // speaker → sender (capta áudio); listener → receiver (vê avatar)
   const chatRole: LibrasChatRole = role === 'speaker' ? 'sender' : 'receiver';
-  const myRole: LibrasChatRole = chatRole;
   const otherRole: LibrasChatRole = role === 'speaker' ? 'receiver' : 'sender';
 
   // Novo texto recebido do outro lado → adiciona ao log (guard contra duplicatas)
@@ -111,7 +88,7 @@ export function LibrasChatPanel({
   }, [incomingMessage, otherRole]);
 
   const handleSend = (text: string) => {
-    setMessages((m) => [...m, { id: crypto.randomUUID(), from: myRole, text }]);
+    setMessages((m) => [...m, { id: crypto.randomUUID(), from: chatRole, text }]);
     onMessage?.(text);
   };
 

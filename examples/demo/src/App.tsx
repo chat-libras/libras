@@ -3,9 +3,10 @@ import { Spec1Avatar } from './demos/Spec1Avatar';
 import { Spec2Chat } from './demos/Spec2Chat';
 import { Spec3ChatPanel } from './demos/Spec3ChatPanel';
 import { Spec4Provider } from './demos/Spec4Provider';
+import { Spec5Recorder } from './demos/Spec5Recorder';
 import './styles.css';
 
-type Tab = 'spec1' | 'spec2' | 'spec3' | 'spec4';
+type Tab = 'spec1' | 'spec2' | 'spec3' | 'spec4' | 'spec5';
 
 const TABS: { id: Tab; label: string; title: string; desc: string }[] = [
   {
@@ -32,6 +33,12 @@ const TABS: { id: Tab; label: string; title: string; desc: string }[] = [
     title: 'Configuração global com LibrasProvider',
     desc: '<LibrasProvider config={…}> define defaults para todos os componentes filhos. Props locais sobrescrevem o provider.',
   },
+  {
+    id: 'spec5',
+    label: 'Spec 5 — Gravação',
+    title: 'Gravar vídeo com câmera + avatar',
+    desc: 'Avatar Libras flutuante e arrastável. Posicione sobre o Photobooth ou FaceTime e grave com Shift+Cmd+5. Velocidade 3× por padrão.',
+  },
 ];
 
 export function App() {
@@ -45,10 +52,12 @@ export function App() {
         <p>Harness de teste das 4 formas de uso do plugin.</p>
       </header>
 
-      <nav className="demo__tabs">
+      <nav className="demo__tabs" role="tablist" aria-label="Especificações">
         {TABS.map((t) => (
           <button
             key={t.id}
+            role="tab"
+            aria-selected={active === t.id}
             className={`demo__tab ${active === t.id ? 'demo__tab--active' : ''}`}
             onClick={() => setActive(t.id)}
           >
@@ -67,6 +76,7 @@ export function App() {
         {active === 'spec2' && <Spec2Chat />}
         {active === 'spec3' && <Spec3ChatPanel />}
         {active === 'spec4' && <Spec4Provider />}
+        {active === 'spec5' && <Spec5Recorder />}
       </main>
     </div>
   );
