@@ -1,0 +1,1 @@
+export { getCameraStream } from './getCameraStream';

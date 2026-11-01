@@ -1,12 +1,16 @@
-import { useState } from 'react';
-import { Spec1Avatar } from './demos/Spec1Avatar';
-import { Spec2Chat } from './demos/Spec2Chat';
-import { Spec3ChatPanel } from './demos/Spec3ChatPanel';
-import { Spec4Provider } from './demos/Spec4Provider';
-import { Spec5Recorder } from './demos/Spec5Recorder';
+import { useState, type ComponentType } from 'react';
+import { Spec1Avatar, Spec2Chat, Spec3ChatPanel, Spec4Provider, Spec5Recorder } from './demos';
 import './styles.css';
 
 type Tab = 'spec1' | 'spec2' | 'spec3' | 'spec4' | 'spec5';
+
+const SPEC_COMPONENTS: Record<Tab, ComponentType> = {
+  spec1: Spec1Avatar,
+  spec2: Spec2Chat,
+  spec3: Spec3ChatPanel,
+  spec4: Spec4Provider,
+  spec5: Spec5Recorder,
+};
 
 const TABS: { id: Tab; label: string; title: string; desc: string }[] = [
   {
@@ -44,6 +48,7 @@ const TABS: { id: Tab; label: string; title: string; desc: string }[] = [
 export function App() {
   const [active, setActive] = useState<Tab>('spec1');
   const tab = TABS.find((t) => t.id === active)!;
+  const ActiveSpec = SPEC_COMPONENTS[active];
 
   return (
     <div className="demo">
@@ -72,11 +77,7 @@ export function App() {
       </div>
 
       <main className="demo__content">
-        {active === 'spec1' && <Spec1Avatar />}
-        {active === 'spec2' && <Spec2Chat />}
-        {active === 'spec3' && <Spec3ChatPanel />}
-        {active === 'spec4' && <Spec4Provider />}
-        {active === 'spec5' && <Spec5Recorder />}
+        <ActiveSpec />
       </main>
     </div>
   );
