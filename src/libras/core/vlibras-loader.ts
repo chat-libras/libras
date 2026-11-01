@@ -95,6 +95,11 @@ export function resetVLibrasPlayer(): void {
   loadedContainer = null;
 }
 
+/**
+ * Cria (ou reutiliza) o singleton do player VLibras num container DOM.
+ * Injeta o bundle Unity uma única vez e aguarda o evento `'load'`.
+ * Se o container mudar (troca de aba), move o canvas existente para o novo container.
+ */
 export async function createVLibrasPlayer(
   container: HTMLElement,
   options: VLibrasLoaderOptions = {}

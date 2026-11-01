@@ -18,6 +18,10 @@ import { makeDedup } from '../core/asr/phrase-source';
 // palavra (parciais); alimentar parciais faria o avatar repetir/atropelar.
 // ---------------------------------------------------------------------------
 
+/**
+ * Receptor de linhas de legenda que as encaminha ao avatar de Libras.
+ * Use quando a plataforma já entrega texto (ex.: legendas ao vivo do Teams).
+ */
 export interface CaptionSink {
   /** Enfileira uma linha final de legenda para sinalização. */
   push(line: string): void;

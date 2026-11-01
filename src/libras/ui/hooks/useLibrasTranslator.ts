@@ -29,12 +29,17 @@ export interface UseLibrasTranslatorOptions {
 export interface LibrasTranslatorApi {
   /** Anexe a um <div> onde o avatar será renderizado (callback ref). */
   containerRef: React.RefCallback<HTMLDivElement>;
+  /** Estado combinado: 'loading' → 'ready' → 'listening' | 'error'. */
   status: LibrasStatus;
+  /** Mensagem de erro do avatar ou do ASR, se houver. */
   error: string | null;
-  /** Transcrição parcial ao vivo. */
+  /** Transcrição parcial ao vivo (atualizada enquanto o usuário fala). */
   interim: string;
+  /** `true` enquanto o ASR estiver capturando áudio. */
   listening: boolean;
+  /** Inicia a captura de áudio e o reconhecimento de fala. */
   start: () => void;
+  /** Para a captura e libera o microfone/stream. */
   stop: () => void;
   /** Alimenta um texto manualmente (sem áudio). */
   translate: (text: string) => void;
@@ -44,6 +49,16 @@ export interface LibrasTranslatorApi {
   setSpeed: (speed: number) => void;
 }
 
+/**
+ * Hook principal: combina avatar VLibras e ASR em uma única API.
+ * Sinaliza automaticamente o áudio reconhecido; permite também enviar texto manual via `translate`.
+ *
+ * @example
+ * const { containerRef, status, start, stop } = useLibrasTranslator({
+ *   audio: { kind: 'microphone' },
+ * });
+ * <div ref={containerRef} style={{ width: 320, height: 240 }} />
+ */
 export function useLibrasTranslator(options: UseLibrasTranslatorOptions): LibrasTranslatorApi {
   const { audio, asr, vlibras, autoStart = true, speed: initialSpeed = 1, onTranscript } = options;
 
