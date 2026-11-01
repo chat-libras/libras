@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import type { SendFormProps } from '../../interfaces/SendFormProps';
-import './SendForm.css';
 
 export function SendForm({ placeholder, onSend, submitLabel = 'Enviar', children, className, style }: SendFormProps) {
   const [text, setText] = useState('');

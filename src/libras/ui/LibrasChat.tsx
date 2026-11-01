@@ -5,8 +5,6 @@ import { resolveStrings } from './utils/strings';
 import { useLibrasConfig } from './LibrasProvider';
 import type { LibrasChatProps } from './interfaces/LibrasChatProps';
 import type { AudioSource, ASROptions } from '../core/asr/phrase-source';
-import './LibrasChat.css';
-
 // Re-exporta os tipos públicos (a implementação mora em `./interfaces`).
 export type {
   LibrasChatProps,
@@ -37,7 +35,7 @@ export function LibrasChat({
   const resolvedVlibras = vlibras ?? ctx.vlibras;
 
   return (
-    <section className={`libras-chat ${className ?? ''}`} style={style}>
+    <section className={`libras-chat ${className ?? ''}`} style={style} data-role={role}>
       {role === 'sender' ? (
         <SenderSide
           messages={messages}

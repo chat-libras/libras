@@ -102,12 +102,12 @@ export function LibrasTranslator({
       />
 
       {libras.status === 'loading' && (
-        <div className="libras-translator__overlay" aria-live="polite">
+        <div className="libras-translator__overlay" data-status="loading" aria-live="polite">
           {s.avatarLoading}
         </div>
       )}
       {libras.status === 'error' && (
-        <div className="libras-translator__overlay libras-translator__overlay--error" role="alert">
+        <div className="libras-translator__overlay" data-status="error" role="alert">
           {libras.error}
         </div>
       )}

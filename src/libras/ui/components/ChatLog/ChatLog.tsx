@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react';
 import type { ChatLogProps } from '../../interfaces/ChatLogProps';
-import './ChatLog.css';
 
 export function ChatLog({ messages, mine, labels, className, style }: ChatLogProps) {
   const endRef = useRef<HTMLDivElement>(null);
@@ -18,7 +17,9 @@ export function ChatLog({ messages, mine, labels, className, style }: ChatLogPro
       {messages.map((m) => (
         <div
           key={m.id}
-          className={`libras-chat__bubble ${m.from === mine ? 'libras-chat__bubble--mine' : ''}`}
+          className="libras-chat__bubble"
+          data-from={m.from}
+          data-mine={m.from === mine}
         >
           <span className="libras-chat__who">{labels[m.from]}</span>
           {m.text}
