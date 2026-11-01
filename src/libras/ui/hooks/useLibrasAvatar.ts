@@ -34,6 +34,15 @@ export interface LibrasAvatarApi {
   renderer: SignRenderer | null;
 }
 
+/**
+ * Hook de baixo nível que controla apenas o avatar (sem ASR).
+ * Use quando precisar sinalizar texto de outra fonte (legenda, teclado, stream já transcrito).
+ *
+ * @example
+ * const { containerRef, translate } = useLibrasAvatar();
+ * <div ref={containerRef} style={{ width: 320, height: 240 }} />
+ * <button onClick={() => translate('Bom dia')}>Sinalizar</button>
+ */
 export function useLibrasAvatar(options: UseLibrasAvatarOptions = {}): LibrasAvatarApi {
   const ctx = useLibrasConfig();
   const { vlibras = ctx.vlibras, speed: initialSpeed = 1, onReady } = options;

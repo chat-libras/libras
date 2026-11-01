@@ -43,6 +43,12 @@ export interface VLibrasRendererOptions {
   settleMs?: number;
 }
 
+/**
+ * Adapter do player VLibras para {@link SignRenderer}.
+ * Mantém uma fila sincronizada: cada frase aguarda o avatar terminar de sinalizar
+ * antes de a próxima começar. Frases antigas são descartadas quando a fila enche
+ * (mantém tempo real quando a fala supera a velocidade de sinalização).
+ */
 export class VLibrasSignRenderer implements SignRenderer {
   private queue: string[] = [];
   private isSigning = false;

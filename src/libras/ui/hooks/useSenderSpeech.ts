@@ -15,6 +15,10 @@ export interface SenderSpeechApi {
   toggle: () => void;
 }
 
+/**
+ * Hook interno do `<LibrasChat role="sender">`: alterna entre ouvir e parar via `toggle`,
+ * emitindo frases finais reconhecidas pelo callback `onPhrase`.
+ */
 export function useSenderSpeech(
   audio: AudioSource,
   asr: ASROptions,

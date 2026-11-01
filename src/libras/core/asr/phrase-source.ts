@@ -34,12 +34,16 @@ export interface PhraseCallbacks {
 }
 
 export interface PhraseSource {
+  /** Inicia a captura e o reconhecimento de fala. */
   start(): Promise<void>;
+  /** Para a captura e libera o microfone/stream. */
   stop(): void;
 }
 
-// Descarta frases vazias e a mesma frase repetida em <3s (ruído/eco).
-// Exportado para reuso por fontes de texto ao vivo (ex.: legendas do Teams).
+/**
+ * Cria um callback que filtra frases vazias e suprime repetições em menos de 3 s (ruído/eco).
+ * Reutilizável por qualquer fonte de texto ao vivo (legendas, WebSocket, etc.).
+ */
 export function makeDedup(onPhrase: (t: string) => void): (t: string) => void {
   let last = '';
   let lastEmittedAt = 0;
@@ -54,6 +58,10 @@ export function makeDedup(onPhrase: (t: string) => void): (t: string) => void {
   };
 }
 
+/**
+ * Cria uma {@link PhraseSource} que combina uma fonte de áudio e um motor de ASR,
+ * entregando frases finais deduplicadas via `callbacks.onPhrase`.
+ */
 export function createPhraseSource(
   audio: AudioSource,
   asr: ASROptions,

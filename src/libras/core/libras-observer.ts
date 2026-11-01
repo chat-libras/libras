@@ -23,6 +23,10 @@ export interface LibrasObserverOptions {
 
 const DEFAULT_TRANSLATOR_URL = 'https://traducao2.vlibras.gov.br/translate';
 
+/**
+ * Canal de texto → Libras com chunking por pontuação e cache de glosa.
+ * Útil para integrar fontes externas de texto (legendas, WebSockets) sem usar ASR.
+ */
 export class LibrasObserver {
   private readonly glosaCache = new Map<string, string>();
   private readonly renderer: SignRenderer;

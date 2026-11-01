@@ -143,7 +143,7 @@ function Tradutor({ stream }: { stream: MediaStream }) {
   const { containerRef, status, interim, listening, start, stop } =
     useLibrasTranslator({
       audio: { kind: 'stream', stream },
-      asr: { provider: 'deepgram', apiKey: import.meta.env.VITE_DEEPGRAM_KEY },
+      asr: { provider: 'custom', factory: myDeepgramFactory },
       autoStart: false,
     });
 
@@ -198,10 +198,10 @@ import { LibrasTranslator } from 'libras-translator';
   speed={1.2}
 />
 
-// Traduzir audio remoto (Deepgram):
+// Traduzir audio remoto (custom ASR — ex.: Deepgram):
 <LibrasTranslator
   audio={{ kind: 'stream', stream: remoteStream }}
-  asr={{ provider: 'deepgram', apiKey: 'DG_KEY' }}
+  asr={{ provider: 'custom', factory: myDeepgramFactory }}
   controls={{ start: true, speed: true, text: false }}
 />
 ```
@@ -540,6 +540,7 @@ interface SignRenderer {
   play(text: string): void;
   clear(): void;
   setSpeed(speed: number): void;
+  dispose(): void;
   busy: boolean;
   pending: number;
 }
@@ -553,14 +554,16 @@ Forma nao-React de acionar o avatar. Util em ambientes sem React ou para integra
 
 ```ts
 interface LibrasObserverOptions {
-  renderer: SignRenderer;
   translatorUrl?: string;
+  onGlosa?: (text: string, glosa: string, fromCache: boolean) => void;
+  onError?: (text: string, error: string) => void;
 }
 
 class LibrasObserver {
-  constructor(options: LibrasObserverOptions);
-  observe(text: string): void;  // sinaliza o texto
-  destroy(): void;
+  constructor(renderer: SignRenderer, opts?: LibrasObserverOptions);
+  observe(texts: string[]): void;  // chunking por pontuacao; chame com texto parcial ou final
+  clearCache(): void;
+  readonly cacheSize: number;
 }
 ```
 

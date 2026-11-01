@@ -9,10 +9,16 @@ export interface A11yOptions {
   respectReducedMotion?: boolean;
 }
 
+/** Configuração global passada ao `<LibrasProvider>`. Herdada por todos os componentes filhos. */
 export interface LibrasConfig {
+  /** Opções padrão do player VLibras (avatar, URL do bundle, endpoint de tradução). */
   vlibras?: VLibrasLoaderOptions;
+  /** Motor de ASR padrão para componentes que capturam áudio. */
   asr?: ASROptions;
+  /** Fonte de áudio padrão. */
   audio?: AudioSource;
+  /** Textos da UI padrão (i18n/rebranding). */
   strings?: LibrasStrings;
+  /** Opções de acessibilidade padrão. */
   a11y?: A11yOptions;
 }
