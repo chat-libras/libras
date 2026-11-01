@@ -4,8 +4,10 @@ import {
   type UseLibrasTranslatorOptions,
   type LibrasTranslatorApi,
 } from './useLibrasTranslator';
-import { resolveStrings, type LibrasStrings } from './strings';
+import { resolveStrings, type LibrasStrings } from './utils/strings';
 import { useLibrasConfig } from './LibrasProvider';
+import { resolveControls } from './utils/LibrasTranslator';
+import { SPEED_STEP, SPEED_MIN, SPEED_MAX } from './utils/speed';
 
 // ---------------------------------------------------------------------------
 // Componente pronto-para-usar: renderiza o avatar do VLibras traduzindo o áudio
@@ -48,18 +50,6 @@ export interface LibrasTranslatorProps extends UseLibrasTranslatorOptions {
   strings?: LibrasStrings;
 }
 
-// Ciclo de velocidade: 1× → 2× em passos de 0.25×, volta ao início.
-const SPEED_STEP = 0.25;
-const SPEED_MIN = 1;
-const SPEED_MAX = 2;
-
-function resolveControls(controls: LibrasControls | undefined) {
-  if (controls === undefined || controls === true) {
-    return { start: true, text: true, speed: true };
-  }
-  if (controls === false) return { start: false, text: false, speed: false };
-  return { start: !!controls.start, text: !!controls.text, speed: !!controls.speed };
-}
 
 function Controls({
   api,

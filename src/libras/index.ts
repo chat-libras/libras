@@ -52,8 +52,8 @@ export type {
 } from './ui/useLibrasAvatar';
 
 // ── i18n / strings ──────────────────────────────────────────────────────────
-export type { LibrasStrings } from './ui/strings';
-export { DEFAULT_STRINGS } from './ui/strings';
+export type { LibrasStrings } from './ui/utils/strings';
+export { DEFAULT_STRINGS } from './ui/utils/strings';
 
 // ── ASR ─────────────────────────────────────────────────────────────────────
 export type { AudioSource, ASROptions } from './core/asr/phrase-source';

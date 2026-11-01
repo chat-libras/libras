@@ -1,6 +1,6 @@
 import type { AudioSource, ASROptions } from '../../core/asr/phrase-source';
 import type { LibrasChatMessage, LibrasChatRole } from './LibrasChatProps';
-import type { LibrasStrings } from '../strings';
+import type { LibrasStrings } from '../utils/strings';
 
 export interface SenderSideProps {
   messages: LibrasChatMessage[];

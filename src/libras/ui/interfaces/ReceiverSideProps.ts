@@ -1,6 +1,6 @@
 import type { VLibrasLoaderOptions } from '../../core/vlibras-loader';
 import type { LibrasChatMessage, LibrasChatRole } from './LibrasChatProps';
-import type { LibrasStrings } from '../strings';
+import type { LibrasStrings } from '../utils/strings';
 
 export interface ReceiverSideProps {
   messages: LibrasChatMessage[];

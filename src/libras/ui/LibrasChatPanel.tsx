@@ -3,7 +3,7 @@ import { LibrasChat } from './LibrasChat';
 import type { LibrasChatMessage, LibrasChatRole } from './interfaces/LibrasChatProps';
 import type { AudioSource, ASROptions } from '../core/asr/phrase-source';
 import type { VLibrasLoaderOptions } from '../core/vlibras-loader';
-import type { LibrasStrings } from './strings';
+import type { LibrasStrings } from './utils/strings';
 
 
 export type LibrasChatPanelRole = 'speaker' | 'listener';

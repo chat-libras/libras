@@ -1,7 +1,7 @@
 import { SenderSide } from './components/SenderSide';
 import { ReceiverSide } from './components/ReceiverSide';
 import { resolveLabels } from './utils/messages';
-import { resolveStrings } from './strings';
+import { resolveStrings } from './utils/strings';
 import { useLibrasConfig } from './LibrasProvider';
 import type { LibrasChatProps } from './interfaces/LibrasChatProps';
 import type { AudioSource, ASROptions } from '../core/asr/phrase-source';

@@ -1,7 +1,7 @@
 import { createContext, useContext } from 'react';
 import type { VLibrasLoaderOptions } from '../core/vlibras-loader';
 import type { AudioSource, ASROptions } from '../core/asr/phrase-source';
-import type { LibrasStrings } from './strings';
+import type { LibrasStrings } from './utils/strings';
 
 export interface A11yOptions {
   /** aria-label do container do avatar. Default: "Avatar de Libras". */

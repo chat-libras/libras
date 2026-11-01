@@ -7,6 +7,7 @@ import {
   type ASROptions,
   type PhraseSource,
 } from '../core/asr/phrase-source';
+import { resolveAsr } from './utils/useLibrasTranslator';
 
 // ---------------------------------------------------------------------------
 // Hook principal do plugin: monta o avatar do VLibras num container e traduz um
@@ -57,13 +58,6 @@ export interface LibrasTranslatorApi {
   speed: number;
   /** Ajusta a velocidade da sinalização ao vivo. */
   setSpeed: (speed: number) => void;
-}
-
-export function resolveAsr(audio: AudioSource, asr?: ASROptions): ASROptions {
-  if (asr) return asr;
-  // Sem ASR explícito: microfone usa Web Speech (grátis); stream exige nuvem.
-  if (audio.kind === 'microphone') return { provider: 'webspeech', lang: 'pt-BR' };
-  return { provider: 'webspeech', lang: 'pt-BR' }; // inválido p/ stream → erro claro no phrase-source
 }
 
 export function useLibrasTranslator(options: UseLibrasTranslatorOptions): LibrasTranslatorApi {
