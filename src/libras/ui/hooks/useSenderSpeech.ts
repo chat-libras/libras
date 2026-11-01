@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   createPhraseSource,
   type AudioSource,
@@ -29,7 +29,7 @@ export function useSenderSpeech(
   const onPhraseRef = useRef(onPhrase);
   onPhraseRef.current = onPhrase;
 
-  const toggle = () => {
+  const toggle = useCallback(() => {
     if (sourceRef.current) {
       sourceRef.current.stop();
       sourceRef.current = null;
@@ -37,8 +37,8 @@ export function useSenderSpeech(
     }
     setError(null);
     const source = createPhraseSource(audio, asr, {
-      onPhrase: (t) => {
-        onPhraseRef.current(t);
+      onPhrase: (text) => {
+        onPhraseRef.current(text);
         setInterim('');
       },
       onInterim: setInterim,
@@ -49,8 +49,8 @@ export function useSenderSpeech(
       },
     });
     sourceRef.current = source;
-    source.start().catch((e) => setError(String(e?.message ?? e)));
-  };
+    source.start().catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)));
+  }, [audio, asr]);
 
   useEffect(() => () => sourceRef.current?.stop(), []);
 

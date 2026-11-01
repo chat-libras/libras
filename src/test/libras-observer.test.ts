@@ -13,6 +13,7 @@ class FakeRenderer implements SignRenderer {
   play(text: string) { this.played.push(text); }
   clear() { this.played = []; }
   setSpeed(_s: number) {}
+  dispose() { this.clear(); }
 }
 
 describe('LibrasObserver — chunking e cache', () => {

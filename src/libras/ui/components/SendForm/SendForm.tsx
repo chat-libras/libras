@@ -6,9 +6,9 @@ export function SendForm({ placeholder, onSend, submitLabel = 'Enviar', children
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    const t = text.trim();
-    if (!t) return;
-    onSend(t);
+    const trimmedText = text.trim();
+    if (!trimmedText) return;
+    onSend(trimmedText);
     setText('');
   };
 
