@@ -68,7 +68,7 @@ export { withWebSpeechFallback } from './core/asr/with-webspeech-fallback';
 export * from './adapters';
 
 // ── Núcleo (uso avançado / integração não-React) ─────────────────────────────
-export {} from './core/vlibras-renderer';
+export { VLibrasSignRenderer } from './core/vlibras-renderer';
 export type {
   VLibrasPlayerLike,
   VLibrasRendererOptions,

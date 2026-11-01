@@ -263,7 +263,7 @@ function ChatApp({ ws }: { ws: WebSocket }) {
       role="sender"
       messages={messages}
       onSend={handleSend}
-      labels={{ doctor: 'Medico', client: 'Paciente' }} {/* labels sao customizaveis para qualquer contexto */}
+      labels={{ sender: 'Medico', receiver: 'Paciente' }}
     />
   );
 }
@@ -333,17 +333,17 @@ type AudioSource =
 ```ts
 type ASROptions =
   | { provider: 'webspeech'; lang?: string }
-  | { provider: 'deepgram'; apiKey: string; lang?: string }
   | { provider: 'custom'; factory: ASRFactory };
 ```
 
 | Provider | Custo | Funciona com | Requisitos |
 |----------|-------|--------------|------------|
-| `webspeech` | Gratis | `microphone` | Chrome / Edge; idioma do SO |
-| `deepgram` | Pago | `microphone` ou `stream` | API key; Node proxy recomendado |
+| `webspeech` | Gratis | `microphone` | Chrome / Edge |
 | `custom` | — | Qualquer | Implementar `ASRFactory` |
 
-O `lang` padrao e `'pt-BR'` nos dois primeiros providers.
+O `lang` padrao e `'pt-BR'` no provider `webspeech`.
+
+> **Deepgram, AssemblyAI, Azure, etc.:** nao sao providers built-in. Use `provider: 'custom'` com uma `ASRFactory` que chame o SDK de sua escolha. Veja o exemplo abaixo.
 
 ---
 
@@ -352,12 +352,12 @@ O `lang` padrao e `'pt-BR'` nos dois primeiros providers.
 Interface para trazer seu proprio ASR.
 
 ```ts
-type ASRFactory = (callbacks: {
-  onPhrase: (text: string) => void;
-  onInterim: (text: string) => void;
-  onError: (err: Error) => void;
-  onListening: (listening: boolean) => void;
-}) => CloudASR;
+interface CloudASRCallbacks {
+  onTranscript: (text: string, final: boolean) => void;
+  onError: (error: string) => void;
+}
+
+type ASRFactory = (callbacks: CloudASRCallbacks) => CloudASR;
 
 interface CloudASR {
   start(stream: MediaStream): Promise<void>;
@@ -368,21 +368,22 @@ interface CloudASR {
 #### Exemplo de ASR customizado
 
 ```ts
-import { ASRFactory } from 'libras-translator';
+import type { ASRFactory } from 'libras-translator';
 
-const myFactory: ASRFactory = ({ onPhrase, onInterim, onError, onListening }) => ({
+const myFactory: ASRFactory = ({ onTranscript, onError }) => ({
   async start(stream) {
-    onListening(true);
-    // conectar ao seu servico de ASR...
-    // chamar onPhrase(text) para cada frase final
-    // chamar onInterim(text) para resultados parciais
+    // conectar ao seu servico de ASR com `stream`...
+    // chamar onTranscript(text, true)  para cada frase final
+    // chamar onTranscript(text, false) para resultados parciais (interim)
+    // chamar onError(mensagem) em caso de falha
   },
   stop() {
-    onListening(false);
     // encerrar conexao
   },
 });
+```
 
+```tsx
 <LibrasTranslator
   audio={{ kind: 'stream', stream }}
   asr={{ provider: 'custom', factory: myFactory }}
