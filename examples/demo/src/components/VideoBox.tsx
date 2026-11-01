@@ -3,7 +3,7 @@ import { useCamera } from '../hooks/useCamera';
 // Caixa de vídeo de um participante da chamada simulada.
 //   variant="camera"      → webcam real (com botão de ativar) — o médico.
 //   variant="placeholder" → caixa estática (o cliente, sem câmera na demo).
-interface VideoBoxProps {
+export interface VideoBoxProps {
   variant: 'camera' | 'placeholder';
   label: string;
   emoji: string;

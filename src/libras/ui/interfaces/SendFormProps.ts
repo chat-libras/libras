@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 
 export interface SendFormProps {
   placeholder: string;
@@ -7,4 +7,6 @@ export interface SendFormProps {
   submitLabel?: string;
   /** Conteúdo extra ao lado do botão Enviar (ex.: botão de microfone). */
   children?: ReactNode;
+  className?: string;
+  style?: CSSProperties;
 }

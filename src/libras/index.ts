@@ -15,21 +15,21 @@
 
 // ── Provider global (opt-in) ────────────────────────────────────────────────
 export { LibrasProvider, useLibrasConfig } from './ui/LibrasProvider';
-export type { LibrasConfig, A11yOptions } from './ui/LibrasProvider';
+export type { LibrasConfig, A11yOptions } from './ui/interfaces/LibrasProviderProps';
 
 // ── Hook + componente principal ─────────────────────────────────────────────
-export { useLibrasTranslator } from './ui/useLibrasTranslator';
+export { useLibrasTranslator } from './ui/hooks/useLibrasTranslator';
 export type {
   UseLibrasTranslatorOptions,
   LibrasTranslatorApi,
   LibrasStatus,
-} from './ui/useLibrasTranslator';
+} from './ui/hooks/useLibrasTranslator';
 
 export { LibrasTranslator } from './ui/LibrasTranslator';
 export type {
   LibrasTranslatorProps,
   LibrasControls,
-} from './ui/LibrasTranslator';
+} from './ui/interfaces/LibrasTranslatorProps';
 
 // ── Chat controlado (pai gerencia mensagens) ─────────────────────────────────
 export { LibrasChat } from './ui/LibrasChat';
@@ -41,19 +41,19 @@ export type {
 
 // ── Chat drop-in (estado interno, basta conectar ao transporte) ──────────────
 export { LibrasChatPanel } from './ui/LibrasChatPanel';
-export type { LibrasChatPanelProps, LibrasChatPanelRole } from './ui/LibrasChatPanel';
+export type { LibrasChatPanelProps, LibrasChatPanelRole } from './ui/interfaces/LibrasChatPanelProps';
 
 // ── Avatar-only (sinaliza texto pronto, sem ASR) ────────────────────────────
-export { useLibrasAvatar } from './ui/useLibrasAvatar';
+export { useLibrasAvatar } from './ui/hooks/useLibrasAvatar';
 export type {
   UseLibrasAvatarOptions,
   LibrasAvatarApi,
   LibrasAvatarStatus,
-} from './ui/useLibrasAvatar';
+} from './ui/hooks/useLibrasAvatar';
 
 // ── i18n / strings ──────────────────────────────────────────────────────────
-export type { LibrasStrings } from './ui/strings';
-export { DEFAULT_STRINGS } from './ui/strings';
+export type { LibrasStrings } from './ui/utils/strings';
+export { DEFAULT_STRINGS } from './ui/utils/strings';
 
 // ── ASR ─────────────────────────────────────────────────────────────────────
 export type { AudioSource, ASROptions } from './core/asr/phrase-source';

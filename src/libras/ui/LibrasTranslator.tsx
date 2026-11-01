@@ -1,65 +1,12 @@
 import { useState } from 'react';
-import {
-  useLibrasTranslator,
-  type UseLibrasTranslatorOptions,
-  type LibrasTranslatorApi,
-} from './useLibrasTranslator';
-import { resolveStrings, type LibrasStrings } from './strings';
+import { useLibrasTranslator, type LibrasTranslatorApi } from './hooks/useLibrasTranslator';
+import { resolveStrings, type LibrasStrings } from './utils/strings';
 import { useLibrasConfig } from './LibrasProvider';
+import { resolveControls } from './utils/LibrasTranslator';
+import { SPEED_STEP, SPEED_MIN, SPEED_MAX } from './utils/speed';
+import type { LibrasTranslatorProps } from './interfaces/LibrasTranslatorProps';
 
-// ---------------------------------------------------------------------------
-// Componente pronto-para-usar: renderiza o avatar do VLibras traduzindo o áudio
-// dado. Ideal para embutir num app de chamada de vídeo (telemedicina).
-//
-//   <LibrasTranslator
-//     audio={{ kind: 'stream', stream: remoteAudioStream }}
-//     asr={{ provider: 'custom', factory: myASRFactory }}
-//     showCaptions
-//     controls
-//   />
-// ---------------------------------------------------------------------------
-
-/** Quais controles embutidos exibir. `true` = todos. */
-export type LibrasControls =
-  | boolean
-  | {
-      /** Botão iniciar/parar a tradução do áudio. */
-      start?: boolean;
-      /** Campo para digitar e sinalizar um texto (sem áudio). */
-      text?: boolean;
-      /** Botão para ciclar a velocidade da sinalização. */
-      speed?: boolean;
-    };
-
-export interface LibrasTranslatorProps extends UseLibrasTranslatorOptions {
-  className?: string;
-  style?: React.CSSProperties;
-  /** Mostra a transcrição parcial sobre o avatar. */
-  showCaptions?: boolean;
-  /**
-   * Controles embutidos (start/parar, velocidade, input de texto).
-   * Ligado por padrão; `false` esconde, ou um objeto escolhe quais.
-   */
-  controls?: LibrasControls;
-  /**
-   * Textos da UI (botões, placeholders, estados). Sobrescreva para i18n ou
-   * rebranding sem modificar o componente.
-   */
-  strings?: LibrasStrings;
-}
-
-// Ciclo de velocidade: 1× → 2× em passos de 0.25×, volta ao início.
-const SPEED_STEP = 0.25;
-const SPEED_MIN = 1;
-const SPEED_MAX = 2;
-
-function resolveControls(controls: LibrasControls | undefined) {
-  if (controls === undefined || controls === true) {
-    return { start: true, text: true, speed: true };
-  }
-  if (controls === false) return { start: false, text: false, speed: false };
-  return { start: !!controls.start, text: !!controls.text, speed: !!controls.speed };
-}
+export type { LibrasControls, LibrasTranslatorProps } from './interfaces/LibrasTranslatorProps';
 
 function Controls({
   api,

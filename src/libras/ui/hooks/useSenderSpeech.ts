@@ -6,11 +6,7 @@ import {
   type PhraseSource,
 } from '../../core/asr/phrase-source';
 
-// Captura de fala do lado SENDER: liga/desliga a fonte de frases (ASR plugável)
-// e entrega cada frase final via `onPhrase`. Web Speech (grátis) por padrão, ou
-// um provedor de nuvem, conforme `audio`/`asr` — toda a lógica vem do Core.
-
-export interface SenderSpeech {
+export interface SenderSpeechApi {
   /** Transcrição parcial ao vivo. */
   interim: string;
   listening: boolean;
@@ -23,7 +19,7 @@ export function useSenderSpeech(
   audio: AudioSource,
   asr: ASROptions,
   onPhrase: (text: string) => void
-): SenderSpeech {
+): SenderSpeechApi {
   const [interim, setInterim] = useState('');
   const [listening, setListening] = useState(false);
   const [error, setError] = useState<string | null>(null);

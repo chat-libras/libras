@@ -1,6 +1,6 @@
 import type { AudioSource, ASROptions } from '../../core/asr/phrase-source';
 import type { VLibrasLoaderOptions } from '../../core/vlibras-loader';
-import type { LibrasStrings } from '../strings';
+import type { LibrasStrings } from '../utils/strings';
 
 /** 'sender' = quem fala/digita; 'receiver' = quem vê em Libras (participante surdo). */
 export type LibrasChatRole = 'sender' | 'receiver';

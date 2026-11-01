@@ -2,16 +2,19 @@ import { useEffect, useRef } from 'react';
 import type { ChatLogProps } from '../../interfaces/ChatLogProps';
 import './ChatLog.css';
 
-// Log de mensagens (bolhas), reusado pelos dois lados. As bolhas do próprio
-// papel (`mine`) alinham à direita; rola para a última a cada nova mensagem.
-export function ChatLog({ messages, mine, labels }: ChatLogProps) {
+export function ChatLog({ messages, mine, labels, className, style }: ChatLogProps) {
   const endRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: 'end' });
   }, [messages.length]);
 
   return (
-    <div className="libras-chat__log">
+    <div
+      className={`libras-chat__log${className ? ` ${className}` : ''}`}
+      style={style}
+      role="log"
+      aria-label="Histórico da conversa"
+    >
       {messages.map((m) => (
         <div
           key={m.id}

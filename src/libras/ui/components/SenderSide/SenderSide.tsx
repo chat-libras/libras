@@ -1,12 +1,9 @@
-import { ChatLog } from '../ChatLog/ChatLog';
-import { SendForm } from '../SendForm/SendForm';
+import { ChatLog } from '../ChatLog';
+import { SendForm } from '../SendForm';
 import { useSenderSpeech } from '../../hooks/useSenderSpeech';
 import type { SenderSideProps } from '../../interfaces/SenderSideProps';
 import './SenderSide.css';
 
-// Lado SENDER (quem fala/digita): captura áudio OU escreve; lê respostas em
-// texto. Toda a lógica de captura (ASR plugável) vive em `useSenderSpeech`;
-// aqui fica só a montagem visual.
 export function SenderSide({ messages, onSend, labels, audio, asr, strings }: SenderSideProps) {
   const speech = useSenderSpeech(audio, asr, onSend);
 

@@ -1,14 +1,11 @@
-import { ChatLog } from '../ChatLog/ChatLog';
-import { SendForm } from '../SendForm/SendForm';
-import { useLibrasAvatar } from '../../useLibrasAvatar';
+import { ChatLog } from '../ChatLog';
+import { SendForm } from '../SendForm';
+import { useLibrasAvatar } from '../../hooks/useLibrasAvatar';
 import { useReceiverSignaling } from '../../hooks/useReceiverSignaling';
 import { nextSpeedValue } from '../../utils/speed';
 import type { ReceiverSideProps } from '../../interfaces/ReceiverSideProps';
 import './ReceiverSide.css';
 
-// Lado RECEIVER (quem vê em Libras): o avatar do VLibras sinaliza as falas do
-// sender; o receiver responde por texto. O avatar só sinaliza texto pronto —
-// não capta áudio. O chat de texto funciona mesmo com o avatar carregando/falho.
 export function ReceiverSide({ messages, onSend, labels, vlibras, speed, strings }: ReceiverSideProps) {
   const avatar = useLibrasAvatar({ speed, vlibras });
   useReceiverSignaling(messages, avatar.translate);

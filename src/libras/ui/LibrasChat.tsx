@@ -1,23 +1,11 @@
-import { SenderSide } from './components/SenderSide/SenderSide';
-import { ReceiverSide } from './components/ReceiverSide/ReceiverSide';
+import { SenderSide } from './components/SenderSide';
+import { ReceiverSide } from './components/ReceiverSide';
 import { resolveLabels } from './utils/messages';
-import { resolveStrings } from './strings';
+import { resolveStrings } from './utils/strings';
 import { useLibrasConfig } from './LibrasProvider';
 import type { LibrasChatProps } from './interfaces/LibrasChatProps';
 import type { AudioSource, ASROptions } from '../core/asr/phrase-source';
 import './LibrasChat.css';
-
-// ---------------------------------------------------------------------------
-// <LibrasChat> — chat assimétrico de acessibilidade, agnóstico de domínio e
-// de transporte. Funciona em qualquer videochamada (saúde, educação, suporte).
-//
-//   role="sender"   → fala (captura de áudio) ou digita; lê respostas em texto.
-//   role="receiver" → vê as mensagens sinalizadas pelo avatar VLibras; responde
-//                     por texto.
-//
-// O componente é *controlado*: você passa o histórico (`messages`) e recebe
-// cada envio em `onSend`. Ligue ao seu transporte (WebSocket, Firebase, etc.).
-// ---------------------------------------------------------------------------
 
 // Re-exporta os tipos públicos (a implementação mora em `./interfaces`).
 export type {
