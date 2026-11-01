@@ -1,21 +1,12 @@
 import { useCallback, useRef, useState } from 'react';
-import { createVLibrasPlayer, resetVLibrasPlayer, type VLibrasLoaderOptions } from '../core/vlibras-loader';
-import { VLibrasSignRenderer } from '../core/vlibras-renderer';
-import type { SignRenderer } from '../core/sign-renderer';
-import { useLibrasConfig } from './LibrasProvider';
+import { createVLibrasPlayer, resetVLibrasPlayer, type VLibrasLoaderOptions } from '../../core/vlibras-loader';
+import { VLibrasSignRenderer } from '../../core/vlibras-renderer';
+import type { SignRenderer } from '../../core/sign-renderer';
+import { useLibrasConfig } from '../LibrasProvider';
 
-// ---------------------------------------------------------------------------
-// Hook enxuto do AVATAR: monta o player do VLibras num container e sinaliza um
-// TEXTO (fila sincronizada), sem nenhuma captura de áudio/ASR.
-//
-// É a base do `useLibrasTranslator` (que só acrescenta a camada de ASR) e é o
-// que o lado CLIENTE do <LibrasChat> usa — ele já recebe o texto pronto do
-// outro lado e só precisa sinalizar.
-//
-//   const avatar = useLibrasAvatar();
-//   avatar.translate('Bom dia');            // sinaliza (enfileira)
-//   return <div ref={avatar.containerRef} className="avatar" />;
-// ---------------------------------------------------------------------------
+// Singleton: o Unity/WebGL do VLibras é pesado e só deve existir uma vez
+// (StrictMode monta 2×; múltiplos renderers = múltiplos listeners = repetição).
+let rendererSingleton: VLibrasSignRenderer | null = null;
 
 export type LibrasAvatarStatus = 'loading' | 'ready' | 'error';
 
@@ -42,10 +33,6 @@ export interface LibrasAvatarApi {
   /** Renderer interno — use para integrar com LibrasObserver (uso avançado). */
   renderer: SignRenderer | null;
 }
-
-// Singleton: o Unity/WebGL do VLibras é pesado e só deve existir uma vez
-// (StrictMode monta 2×; múltiplos renderers = múltiplos listeners = repetição).
-let rendererSingleton: VLibrasSignRenderer | null = null;
 
 export function useLibrasAvatar(options: UseLibrasAvatarOptions = {}): LibrasAvatarApi {
   const ctx = useLibrasConfig();

@@ -1,4 +1,4 @@
-import type { LibrasControls } from '../LibrasTranslator';
+import type { LibrasControls } from '../interfaces/LibrasTranslatorProps';
 
 export function resolveControls(controls: LibrasControls | undefined) {
   if (controls === undefined || controls === true) {

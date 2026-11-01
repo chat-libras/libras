@@ -1,6 +1,6 @@
 import { ChatLog } from '../ChatLog';
 import { SendForm } from '../SendForm';
-import { useLibrasAvatar } from '../../useLibrasAvatar';
+import { useLibrasAvatar } from '../../hooks/useLibrasAvatar';
 import { useReceiverSignaling } from '../../hooks/useReceiverSignaling';
 import { nextSpeedValue } from '../../utils/speed';
 import type { ReceiverSideProps } from '../../interfaces/ReceiverSideProps';

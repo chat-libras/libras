@@ -1,29 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { VLibrasLoaderOptions } from '../core/vlibras-loader';
+import type { VLibrasLoaderOptions } from '../../core/vlibras-loader';
 import { useLibrasAvatar, type LibrasAvatarApi } from './useLibrasAvatar';
 import {
   createPhraseSource,
   type AudioSource,
   type ASROptions,
   type PhraseSource,
-} from '../core/asr/phrase-source';
-import { resolveAsr } from './utils/useLibrasTranslator';
-
-// ---------------------------------------------------------------------------
-// Hook principal do plugin: monta o avatar do VLibras num container e traduz um
-// áudio (microfone ou stream de chamada) para Libras em tempo real, com fila
-// sincronizada (frases não se atropelam).
-//
-// Compõe `useLibrasAvatar` (só o avatar/fila) e acrescenta a camada de ASR
-// (start/parar/escuta/interim). Uso típico em telemedicina (traduzir a fala do
-// médico para o paciente surdo):
-//
-//   const libras = useLibrasTranslator({
-//     audio: { kind: 'stream', stream: remoteAudioStream },  // faixa de áudio do WebRTC
-//     asr:   { provider: 'custom', factory: myASRFactory },
-//   });
-//   return <div ref={libras.containerRef} className="avatar" />;
-// ---------------------------------------------------------------------------
+} from '../../core/asr/phrase-source';
+import { resolveAsr } from '../utils/useLibrasTranslator';
 
 export type LibrasStatus = 'loading' | 'ready' | 'listening' | 'error';
 
