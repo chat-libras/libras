@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useLibrasTranslator, type LibrasTranslatorApi } from './hooks/useLibrasTranslator';
 import { resolveStrings, type LibrasStrings } from './utils/strings';
 import { useLibrasConfig } from './LibrasProvider';
-import { resolveControls } from './utils/LibrasTranslator';
+import { resolveControls } from './utils/resolveControls';
 import { SPEED_STEP, SPEED_MIN, SPEED_MAX } from './utils/speed';
 import type { LibrasTranslatorProps } from './interfaces/LibrasTranslatorProps';
 
@@ -11,11 +11,11 @@ export type { LibrasControls, LibrasTranslatorProps } from './interfaces/LibrasT
 function Controls({
   api,
   show,
-  s,
+  strings,
 }: {
   api: LibrasTranslatorApi;
   show: { start: boolean; text: boolean; speed: boolean };
-  s: Required<LibrasStrings>;
+  strings: Required<LibrasStrings>;
 }) {
   const [phrase, setPhrase] = useState('');
   const disabled = api.status === 'loading' || api.status === 'error';
@@ -41,12 +41,12 @@ function Controls({
             className="libras-translator__input"
             value={phrase}
             onChange={(e) => setPhrase(e.target.value)}
-            placeholder={s.captionPlaceholder}
-            aria-label={s.captionPlaceholder}
-            disabled={api.status === 'loading'}
+            placeholder={strings.captionPlaceholder}
+            aria-label={strings.captionPlaceholder}
+            disabled={disabled}
           />
-          <button type="submit" disabled={api.status === 'loading'}>
-            {s.buttonSubmitText}
+          <button type="submit" disabled={disabled}>
+            {strings.buttonSubmitText}
           </button>
         </form>
       )}
@@ -59,7 +59,7 @@ function Controls({
             disabled={disabled}
             aria-pressed={api.listening}
           >
-            {api.listening ? s.buttonStop : s.buttonTranslate}
+            {api.listening ? strings.buttonStop : strings.buttonTranslate}
           </button>
         )}
         {show.speed && (
@@ -67,8 +67,8 @@ function Controls({
             className="libras-translator__btn"
             onClick={nextSpeed}
             disabled={disabled}
-            title={s.buttonSpeedLabel}
-            aria-label={`${s.buttonSpeedLabel} — ${api.speed.toFixed(2)}×`}
+            title={strings.buttonSpeedLabel}
+            aria-label={`${strings.buttonSpeedLabel} — ${api.speed.toFixed(2)}×`}
           >
             ⏩ {api.speed.toFixed(2)}×
           </button>
@@ -87,7 +87,7 @@ export function LibrasTranslator({
   ...options
 }: LibrasTranslatorProps) {
   const ctx = useLibrasConfig();
-  const s = resolveStrings({ ...ctx.strings, ...stringsProp });
+  const strings = resolveStrings({ ...ctx.strings, ...stringsProp });
   const libras = useLibrasTranslator(options);
   const show = resolveControls(controls);
   const hasControls = show.start || show.text || show.speed;
@@ -98,16 +98,16 @@ export function LibrasTranslator({
         ref={libras.containerRef}
         className="libras-translator__stage"
         role="img"
-        aria-label={s.avatarAriaLabel}
+        aria-label={strings.avatarAriaLabel}
       />
 
       {libras.status === 'loading' && (
-        <div className="libras-translator__overlay" aria-live="polite">
-          {s.avatarLoading}
+        <div className="libras-translator__overlay" data-status="loading" aria-live="polite">
+          {strings.avatarLoading}
         </div>
       )}
       {libras.status === 'error' && (
-        <div className="libras-translator__overlay libras-translator__overlay--error" role="alert">
+        <div className="libras-translator__overlay" data-status="error" role="alert">
           {libras.error}
         </div>
       )}
@@ -117,7 +117,7 @@ export function LibrasTranslator({
         </div>
       )}
 
-      {hasControls && <Controls api={libras} show={show} s={s} />}
+      {hasControls && <Controls api={libras} show={show} strings={strings} />}
     </div>
   );
 }

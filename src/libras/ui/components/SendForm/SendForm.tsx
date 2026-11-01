@@ -1,15 +1,14 @@
 import { useState } from 'react';
 import type { SendFormProps } from '../../interfaces/SendFormProps';
-import './SendForm.css';
 
 export function SendForm({ placeholder, onSend, submitLabel = 'Enviar', children, className, style }: SendFormProps) {
   const [text, setText] = useState('');
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    const t = text.trim();
-    if (!t) return;
-    onSend(t);
+    const trimmedText = text.trim();
+    if (!trimmedText) return;
+    onSend(trimmedText);
     setText('');
   };
 

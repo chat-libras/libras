@@ -1,5 +1,6 @@
 import { useState, type ComponentType } from 'react';
 import { Spec1Avatar, Spec2Chat, Spec3ChatPanel, Spec4Provider, Spec5Recorder } from './demos';
+import './libras-default-theme.css';
 import './styles.css';
 
 type Tab = 'spec1' | 'spec2' | 'spec3' | 'spec4' | 'spec5';

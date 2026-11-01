@@ -7,7 +7,7 @@ import {
   type ASROptions,
   type PhraseSource,
 } from '../../core/asr/phrase-source';
-import { resolveAsr } from '../utils/useLibrasTranslator';
+import { resolveAsr } from '../utils/resolveAsr';
 
 export type LibrasStatus = 'loading' | 'ready' | 'listening' | 'error';
 
@@ -67,19 +67,25 @@ export function useLibrasTranslator(options: UseLibrasTranslatorOptions): Libras
 
   const start = useCallback(() => {
     if (sourceRef.current) return;
-    const { audio: a, asr: r, onTranscript: ot } = optsRef.current;
+    const { audio, asr, onTranscript } = optsRef.current;
     setAsrError(null);
-    const source = createPhraseSource(a, resolveAsr(a, r), {
-      onPhrase: (text) => {
-        avatarRef.current?.translate(text);
-        ot?.(text);
-      },
-      onInterim: setInterim,
-      onError: (e) => setAsrError(e),
-      onListening: setListening,
-    });
+    let source;
+    try {
+      source = createPhraseSource(audio, resolveAsr(audio, asr), {
+        onPhrase: (text) => {
+          avatarRef.current?.translate(text);
+          onTranscript?.(text);
+        },
+        onInterim: setInterim,
+        onError: (e) => setAsrError(e),
+        onListening: setListening,
+      });
+    } catch (e: unknown) {
+      setAsrError(e instanceof Error ? e.message : String(e));
+      return;
+    }
     sourceRef.current = source;
-    source.start().catch((e) => setAsrError(String(e?.message ?? e)));
+    source.start().catch((e: unknown) => setAsrError(e instanceof Error ? e.message : String(e)));
   }, []);
 
   const autoStartRef = useRef(autoStart);

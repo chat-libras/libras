@@ -45,7 +45,7 @@ export interface VLibrasRendererOptions {
 
 export class VLibrasSignRenderer implements SignRenderer {
   private queue: string[] = [];
-  private signing = false;
+  private isSigning = false;
   private lastIssuedAt = 0;
   private readonly maxBacklog: number;
   private readonly settleMs: number;
@@ -71,17 +71,17 @@ export class VLibrasSignRenderer implements SignRenderer {
     if (this.queue.length > this.maxBacklog) {
       this.queue.splice(0, this.queue.length - this.maxBacklog);
     }
-    if (!this.signing) this.advance();
+    if (!this.isSigning) this.advance();
   }
 
   /** Puxa a próxima frase da fila e manda o player sinalizar. */
   private advance(): void {
     const phrase = this.queue.shift();
     if (phrase === undefined) {
-      this.signing = false;
+      this.isSigning = false;
       return;
     }
-    this.signing = true;
+    this.isSigning = true;
     this.lastIssuedAt = Date.now();
     this.player.translate(phrase);
   }
@@ -89,7 +89,7 @@ export class VLibrasSignRenderer implements SignRenderer {
   clear(): void {
     this.queue.length = 0;
     this.player.stop?.();
-    this.signing = false;
+    this.isSigning = false;
   }
 
   setSpeed(speed: number): void {
@@ -97,7 +97,7 @@ export class VLibrasSignRenderer implements SignRenderer {
   }
 
   get busy(): boolean {
-    return this.signing;
+    return this.isSigning;
   }
 
   get pending(): number {

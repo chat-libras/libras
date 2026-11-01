@@ -1,0 +1,160 @@
+/*
+ * libras-default-theme.css — tema de referência para a lib headless.
+ *
+ * A lib `libras-translator` não ship CSS. Este arquivo demonstra como
+ * aplicar estilos usando os seletores que a lib expõe:
+ *
+ *   Classe BEM           → presença garantida (estrutura)
+ *   data-role            → "sender" | "receiver"  (no .libras-chat)
+ *   data-from            → "sender" | "receiver"  (em cada bolha)
+ *   data-mine            → "true" | "false"        (bolha do próprio usuário)
+ *   data-active          → "true" | "false"        (botão de microfone)
+ *   data-status          → "loading" | "error" | "interim" (avisos de estado)
+ *   data-status (overlay)→ "loading" | "error"    (no .libras-translator)
+ *
+ * Copie este arquivo para o seu projeto e customize à vontade.
+ */
+
+/* ── Tokens (sobrescreva em qualquer ancestral) ─────────────────────────── */
+:root {
+  --libras-font:                system-ui, -apple-system, sans-serif;
+  --libras-color-interim:       #a60;
+  --libras-color-error:         crimson;
+  --libras-color-bg-log:        #fff;
+  --libras-color-border:        #eee;
+  --libras-color-bubble-bg:     #eef1f4;
+  --libras-color-bubble-text:   #000;
+  --libras-color-bubble-mine-bg:#d7ebff;
+  --libras-color-who:           #888;
+  --libras-color-stage-bg:      #111;
+  --libras-color-speed-bg:      rgba(0, 0, 0, 0.6);
+  --libras-color-speed-text:    #fff;
+  --libras-color-mic-on-bg:     #ffd7d7;
+  --libras-radius-stage:        10px;
+  --libras-radius-bubble:       10px;
+  --libras-radius-log:          8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .libras-chat__status,
+  .libras-translator__overlay { transition: none; animation: none; }
+}
+
+/* ── LibrasChat ─────────────────────────────────────────────────────────── */
+.libras-chat {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-family: var(--libras-font);
+}
+
+/* avisos de estado (interim, loading, error) */
+.libras-chat__status[data-status="interim"] { color: var(--libras-color-interim); font-size: 13px; }
+.libras-chat__status[data-status="error"]   { color: var(--libras-color-error);   font-size: 13px; }
+.libras-chat__status[data-status="loading"] { color: var(--libras-color-interim); font-size: 13px; }
+
+/* ── ChatLog ────────────────────────────────────────────────────────────── */
+.libras-chat__log {
+  height: 220px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px;
+  background: var(--libras-color-bg-log);
+  border-radius: var(--libras-radius-log);
+  border: 1px solid var(--libras-color-border);
+}
+
+.libras-chat__bubble {
+  max-width: 85%;
+  padding: 6px 10px;
+  border-radius: var(--libras-radius-bubble);
+  background: var(--libras-color-bubble-bg);
+  color: var(--libras-color-bubble-text);
+  font-size: 14px;
+  align-self: flex-start;
+}
+/* bolha do próprio usuário — alinha à direita e muda cor */
+.libras-chat__bubble[data-mine="true"] {
+  align-self: flex-end;
+  background: var(--libras-color-bubble-mine-bg);
+}
+
+.libras-chat__who {
+  display: block;
+  font-size: 10px;
+  color: var(--libras-color-who);
+  text-transform: uppercase;
+}
+
+/* ── SendForm ───────────────────────────────────────────────────────────── */
+.libras-chat__form         { display: flex; gap: 6px; }
+.libras-chat__form input   { flex: 1; padding: 8px; }
+.libras-chat__form button  { padding: 8px 12px; cursor: pointer; }
+
+/* ── SenderSide — botão de microfone ────────────────────────────────────── */
+.libras-chat__mic                  { cursor: pointer; }
+.libras-chat__mic[data-active="true"],
+.libras-chat__mic[aria-pressed="true"] {
+  background: var(--libras-color-mic-on-bg);
+}
+
+/* ── ReceiverSide — avatar + velocidade ─────────────────────────────────── */
+.libras-chat__avatar   { position: relative; }
+.libras-chat__stage {
+  width: 100%;
+  aspect-ratio: 4/3;
+  background: var(--libras-color-stage-bg);
+  border-radius: var(--libras-radius-stage);
+}
+.libras-chat__speed {
+  position: absolute;
+  right: 8px; bottom: 8px;
+  padding: 6px 10px;
+  font-size: 13px;
+  cursor: pointer;
+  border: none;
+  border-radius: 8px;
+  background: var(--libras-color-speed-bg);
+  color: var(--libras-color-speed-text);
+}
+.libras-chat__speed:disabled { opacity: 0.5; cursor: default; }
+
+/* ── LibrasTranslator ───────────────────────────────────────────────────── */
+.libras-translator { position: relative; }
+
+.libras-translator__stage {
+  width: 100%;
+  aspect-ratio: 4/3;
+  background: var(--libras-color-stage-bg);
+  border-radius: var(--libras-radius-stage);
+}
+
+.libras-translator__overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  border-radius: var(--libras-radius-stage);
+}
+.libras-translator__overlay[data-status="error"] {
+  background: rgba(180, 0, 0, 0.6);
+}
+
+.libras-translator__caption {
+  font-size: 13px;
+  color: var(--libras-color-interim);
+  font-style: italic;
+}
+
+.libras-translator__controls { display: flex; flex-direction: column; gap: 6px; }
+.libras-translator__text     { display: flex; gap: 6px; }
+.libras-translator__text input  { flex: 1; padding: 8px; }
+.libras-translator__text button { padding: 8px 12px; cursor: pointer; }
+.libras-translator__buttons  { display: flex; gap: 6px; }
+.libras-translator__btn      { padding: 8px 12px; cursor: pointer; }

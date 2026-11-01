@@ -97,7 +97,7 @@ export function resetVLibrasPlayer(): void {
 
 export async function createVLibrasPlayer(
   container: HTMLElement,
-  opts: VLibrasLoaderOptions = {}
+  options: VLibrasLoaderOptions = {}
 ): Promise<VLibrasPlayerLike> {
   if (playerPromise) {
     const player = await playerPromise;
@@ -111,16 +111,16 @@ export async function createVLibrasPlayer(
 
   loadedContainer = container;
   playerPromise = (async () => {
-    const VLibras = await ensureBundle(opts.bundleUrl ?? '/vlibras/vlibras.js');
-    const player = new VLibras.Player({
-      targetPath: opts.targetPath ?? DEFAULT_TARGET_PATH,
+    const vlibrasGlobal = await ensureBundle(options.bundleUrl ?? '/vlibras/vlibras.js');
+    const player = new vlibrasGlobal.Player({
+      targetPath: options.targetPath ?? DEFAULT_TARGET_PATH,
       // `translator` sobrescreve o endpoint PT→glosa embutido no bundle (gov.br,
       // hoje 401). Sem isto, o player soletra tudo em vez de sinalizar palavras.
-      translator: opts.translatorUrl ?? DEFAULT_TRANSLATOR_URL,
+      translator: options.translatorUrl ?? DEFAULT_TRANSLATOR_URL,
     });
     player.load(container);
-    await new Promise<void>((resolve) => player.on(opts.loadEvent ?? 'load', () => resolve()));
-    if (opts.avatar && player.changeAvatar) player.changeAvatar(opts.avatar);
+    await new Promise<void>((resolve) => player.on(options.loadEvent ?? 'load', () => resolve()));
+    if (options.avatar && player.changeAvatar) player.changeAvatar(options.avatar);
     return player;
   })();
 

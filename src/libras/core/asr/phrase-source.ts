@@ -42,14 +42,14 @@ export interface PhraseSource {
 // Exportado para reuso por fontes de texto ao vivo (ex.: legendas do Teams).
 export function makeDedup(onPhrase: (t: string) => void): (t: string) => void {
   let last = '';
-  let at = 0;
+  let lastEmittedAt = 0;
   return (text: string) => {
     const clean = text.trim();
     const now = Date.now();
     if (clean.length < 2) return;
-    if (clean === last && now - at < 3000) return;
+    if (clean === last && now - lastEmittedAt < 3000) return;
     last = clean;
-    at = now;
+    lastEmittedAt = now;
     onPhrase(clean);
   };
 }
@@ -57,16 +57,16 @@ export function makeDedup(onPhrase: (t: string) => void): (t: string) => void {
 export function createPhraseSource(
   audio: AudioSource,
   asr: ASROptions,
-  cb: PhraseCallbacks
+  callbacks: PhraseCallbacks
 ): PhraseSource {
-  const emit = makeDedup(cb.onPhrase);
+  const emit = makeDedup(callbacks.onPhrase);
 
   // ---- Web Speech API (só microfone) ----
   if (asr.provider === 'webspeech') {
     if (audio.kind === 'stream') {
       return {
         async start() {
-          cb.onError?.(
+          callbacks.onError?.(
             'Web Speech API só ouve o microfone. Para áudio de chamada, ' +
               'use { provider: "custom", factory } com um ASR de nuvem.'
           );
@@ -74,25 +74,25 @@ export function createPhraseSource(
         stop() {},
       };
     }
-    const rec = createSpeechRecognizer(
+    const recognizer = createSpeechRecognizer(
       {
         onFinal: emit,
-        onInterim: cb.onInterim,
-        onError: cb.onError,
-        onStateChange: cb.onListening,
+        onInterim: callbacks.onInterim,
+        onError: callbacks.onError,
+        onStateChange: callbacks.onListening,
       },
       asr.lang
     );
     return {
       async start() {
-        if (!rec) {
-          cb.onError?.('Web Speech API não suportada neste navegador (use o Chrome).');
+        if (!recognizer) {
+          callbacks.onError?.('Web Speech API não suportada neste navegador (use o Chrome).');
           return;
         }
-        rec.start();
+        recognizer.start();
       },
       stop() {
-        rec?.stop();
+        recognizer?.stop();
       },
     };
   }
@@ -111,20 +111,20 @@ export function createPhraseSource(
       }
       instance = asr.factory({
         onTranscript: (text, final) => {
-          cb.onInterim?.(text);
+          callbacks.onInterim?.(text);
           if (final) emit(text);
         },
-        onError: (e) => cb.onError?.(e),
+        onError: (e) => callbacks.onError?.(e),
       });
-      cb.onListening?.(true);
+      callbacks.onListening?.(true);
       await instance.start(stream);
     },
     stop() {
       instance?.stop();
       instance = null;
-      ownedStream?.getTracks().forEach((t) => t.stop());
+      ownedStream?.getTracks().forEach((track) => track.stop());
       ownedStream = null;
-      cb.onListening?.(false);
+      callbacks.onListening?.(false);
     },
   };
 }

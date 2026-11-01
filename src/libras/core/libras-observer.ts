@@ -57,8 +57,8 @@ export class LibrasObserver {
     return text
       .split('.')
       .flatMap((sentence) => sentence.split(/[,;]/))
-      .map((c) => c.trim())
-      .filter((c) => c.length >= 2);
+      .map((clause) => clause.trim())
+      .filter((clause) => clause.length >= 2);
   }
 
   /**
@@ -67,21 +67,19 @@ export class LibrasObserver {
    * - Cache miss: usa renderer.play(clause) e faz prefetch da glosa em background
    */
   private signClause(clause: string): void {
-    const key = clause.toLowerCase();
-    const cached = this.glosaCache.get(key);
+    const cacheKey = clause.toLowerCase();
+    const cached = this.glosaCache.get(cacheKey);
 
     if (cached !== undefined) {
       this.onGlosa?.(clause, cached, true);
-      // Usa play() se disponível (renderer exposto via VLibrasPlayerLike.play?)
-      // Caso contrário, translate() revalida o cache do próprio player
-      this.renderer.play(clause);
+      this.renderer.play(cached);
       return;
     }
 
     // Sinaliza imediatamente (player resolve PT→glosa internamente)
     this.renderer.play(clause);
-    // Prefetch em background para popular o cache
-    this.prefetchGlosa(clause, key);
+    // Prefetch em background para popular o cache na próxima vez
+    this.prefetchGlosa(clause, cacheKey);
   }
 
   /**
@@ -94,9 +92,9 @@ export class LibrasObserver {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text: clause }),
     })
-      .then((r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.text();
+      .then((response) => {
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.text();
       })
       .then((glosa) => {
         const trimmed = glosa.trim();

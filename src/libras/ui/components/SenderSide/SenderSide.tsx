@@ -2,7 +2,6 @@ import { ChatLog } from '../ChatLog';
 import { SendForm } from '../SendForm';
 import { useSenderSpeech } from '../../hooks/useSenderSpeech';
 import type { SenderSideProps } from '../../interfaces/SenderSideProps';
-import './SenderSide.css';
 
 export function SenderSide({ messages, onSend, labels, audio, asr, strings }: SenderSideProps) {
   const speech = useSenderSpeech(audio, asr, onSend);
@@ -11,12 +10,12 @@ export function SenderSide({ messages, onSend, labels, audio, asr, strings }: Se
     <>
       <ChatLog messages={messages} mine="sender" labels={labels} />
       {speech.interim && (
-        <div className="libras-chat__interim" aria-live="polite">
+        <div className="libras-chat__status" data-status="interim" aria-live="polite">
           🎤 {speech.interim}…
         </div>
       )}
       {speech.error && (
-        <div className="libras-chat__error" role="alert">
+        <div className="libras-chat__status" data-status="error" role="alert">
           {speech.error}
         </div>
       )}
@@ -28,8 +27,9 @@ export function SenderSide({ messages, onSend, labels, audio, asr, strings }: Se
         <button
           type="button"
           onClick={speech.toggle}
-          className={speech.listening ? 'libras-chat__mic libras-chat__mic--on' : 'libras-chat__mic'}
+          className="libras-chat__mic"
           aria-pressed={speech.listening}
+          data-active={speech.listening}
           aria-label={speech.listening ? strings.chatMicStop : strings.chatMicStart}
         >
           {speech.listening ? strings.chatMicStop : strings.chatMicStart}

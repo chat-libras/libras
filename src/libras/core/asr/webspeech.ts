@@ -39,18 +39,18 @@ export function createSpeechRecognizer(
   callbacks: SpeechCallbacks,
   lang = 'pt-BR'
 ): SpeechController | null {
-  const Ctor = getRecognitionCtor();
-  if (!Ctor) return null;
+  const RecognitionClass = getRecognitionCtor();
+  if (!RecognitionClass) return null;
 
-  const recognition = new Ctor();
+  const recognition = new RecognitionClass();
   recognition.lang = lang;
   recognition.continuous = true;
   recognition.interimResults = true;
   recognition.maxAlternatives = 1;
 
-  // `active` = intenção do usuário (ouvir). A engine de reconhecimento pára
-  // sozinha após alguns segundos; reiniciamos enquanto `active` for true.
-  let active = false;
+  // `isListening` = intenção do usuário (ouvir). A engine de reconhecimento pára
+  // sozinha após alguns segundos; reiniciamos enquanto `isListening` for true.
+  let isListening = false;
 
   recognition.onresult = (event: SpeechRecognitionEvent) => {
     let interim = '';
@@ -75,7 +75,7 @@ export function createSpeechRecognizer(
   };
 
   recognition.onend = () => {
-    if (active) {
+    if (isListening) {
       // Reinício automático para manter escuta contínua.
       try {
         recognition.start();
@@ -89,21 +89,21 @@ export function createSpeechRecognizer(
 
   return {
     get listening() {
-      return active;
+      return isListening;
     },
     start() {
-      if (active) return;
-      active = true;
+      if (isListening) return;
+      isListening = true;
       try {
         recognition.start();
         callbacks.onStateChange?.(true);
       } catch (err) {
-        active = false;
+        isListening = false;
         callbacks.onError?.(String(err));
       }
     },
     stop() {
-      active = false;
+      isListening = false;
       recognition.stop();
     },
   };

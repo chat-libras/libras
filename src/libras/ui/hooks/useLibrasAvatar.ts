@@ -75,10 +75,12 @@ export function useLibrasAvatar(options: UseLibrasAvatarOptions = {}): LibrasAva
         setStatus('ready');
         onReadyRef.current?.();
       })
-      .catch((e) => {
-        setError(String(e?.message ?? e));
+      .catch((e: unknown) => {
+        setError(e instanceof Error ? e.message : String(e));
         setStatus('error');
       });
+    // vlibras omitido das deps: o player é um singleton que não pode ser recriado
+    // após o primeiro mount — mudar as opções de loader não reinicia o Unity.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

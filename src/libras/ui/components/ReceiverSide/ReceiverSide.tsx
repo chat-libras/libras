@@ -4,7 +4,6 @@ import { useLibrasAvatar } from '../../hooks/useLibrasAvatar';
 import { useReceiverSignaling } from '../../hooks/useReceiverSignaling';
 import { nextSpeedValue } from '../../utils/speed';
 import type { ReceiverSideProps } from '../../interfaces/ReceiverSideProps';
-import './ReceiverSide.css';
 
 export function ReceiverSide({ messages, onSend, labels, vlibras, speed, strings }: ReceiverSideProps) {
   const avatar = useLibrasAvatar({ speed, vlibras });
@@ -31,12 +30,12 @@ export function ReceiverSide({ messages, onSend, labels, vlibras, speed, strings
         </button>
       </div>
       {avatar.status === 'loading' && (
-        <div className="libras-chat__interim" aria-live="polite">
+        <div className="libras-chat__status" data-status="loading" aria-live="polite">
           {strings.avatarLoading}
         </div>
       )}
       {avatar.status === 'error' && (
-        <div className="libras-chat__error" role="alert">
+        <div className="libras-chat__status" data-status="error" role="alert">
           {avatar.error}
         </div>
       )}

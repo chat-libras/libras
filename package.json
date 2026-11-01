@@ -15,6 +15,7 @@
   "files": [
     "dist"
   ],
+  "sideEffects": false,
   "scripts": {
     "demo": "yarn --cwd examples/demo dev",
     "vc:server": "yarn --cwd examples/video-call/server dev",

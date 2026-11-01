@@ -62,34 +62,73 @@ function MeuAvatar() {
 }
 ```
 
-## Tematização com CSS
+## Tematização com CSS (headless)
 
-Os componentes renderizam elementos HTML semânticos com classes CSS. Você pode sobrescrever estilos diretamente:
+A lib não embarca nenhum CSS. Você estiliza os componentes usando as classes BEM e os atributos `data-*` que eles expõem.
+
+### Seletores públicos
+
+| Seletor | Elemento |
+|---------|---------|
+| `.libras-chat` | raiz do `<LibrasChat>` |
+| `.libras-chat[data-role="sender"]` | lado do participante ouvinte |
+| `.libras-chat[data-role="receiver"]` | lado do participante surdo |
+| `.libras-chat__log` | área de histórico de mensagens |
+| `.libras-chat__bubble` | cada bolha de mensagem |
+| `.libras-chat__bubble[data-mine="true"]` | bolha própria (alinha à direita) |
+| `.libras-chat__bubble[data-from="sender"]` | bolha enviada pelo sender |
+| `.libras-chat__status[data-status="interim"]` | transcrição parcial ao vivo |
+| `.libras-chat__status[data-status="error"]` | mensagem de erro |
+| `.libras-chat__mic` | botão de microfone |
+| `.libras-chat__mic[data-active="true"]` | microfone ativo |
+| `.libras-chat__mic[aria-pressed="true"]` | alias acessível para microfone ativo |
+| `.libras-chat__stage` | canvas do avatar |
+| `.libras-translator` | raiz do `<LibrasTranslator>` |
+| `.libras-translator__stage` | canvas do avatar (standalone) |
+| `.libras-translator__overlay[data-status="loading"]` | overlay de carregamento |
+| `.libras-translator__overlay[data-status="error"]` | overlay de erro |
+| `.libras-translator__caption` | texto de legenda/interim |
+
+### CSS custom properties (tokens)
+
+Defina tokens em qualquer ancestral (`:root` ou no container do componente):
 
 ```css
-/* sobrescrever cor e borda do container do avatar */
-.libras-avatar-container {
-  border-radius: 12px;
-  background: #1a1a2e;
-}
-
-/* sobrescrever botoes de controle */
-.libras-controls button {
-  background: #4f46e5;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 8px 16px;
-}
-
-/* sobrescrever o texto de legenda */
-.libras-caption {
-  font-size: 1.1rem;
-  color: #111;
+:root {
+  --libras-font:              system-ui, sans-serif;
+  --libras-color-interim:     #a60;
+  --libras-color-error:       crimson;
+  --libras-color-bg-log:      #fff;
+  --libras-color-border:      #eee;
+  --libras-color-bubble-bg:   #eef1f4;
+  --libras-color-bubble-mine-bg: #d7ebff;
+  --libras-color-mic-on-bg:   #ffd7d7;
+  --libras-color-stage-bg:    #111;
+  --libras-radius-stage:      10px;
+  --libras-radius-bubble:     10px;
 }
 ```
 
-> **Variáveis CSS planejadas:** a próxima versão exporá variáveis CSS (`--libras-avatar-bg`, `--libras-control-color`, etc.) para tematização sem sobrescrever seletores internos. Por ora, use os seletores acima ou passe `className` e `style` para os componentes.
+### Arquivo de tema de referência
+
+O repositório inclui `examples/demo/src/libras-default-theme.css` — um tema completo pronto para copiar. Copie para o seu projeto e customize os tokens e seletores.
+
+```css
+/* exemplo mínimo */
+.libras-chat__bubble[data-mine="true"] {
+  align-self: flex-end;
+  background: var(--libras-color-bubble-mine-bg);
+}
+
+.libras-chat__mic[data-active="true"] {
+  background: var(--libras-color-mic-on-bg);
+}
+
+.libras-chat__status[data-status="error"] {
+  color: var(--libras-color-error);
+  font-size: 13px;
+}
+```
 
 ### Via `className` e `style`
 
