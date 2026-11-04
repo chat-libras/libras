@@ -8,8 +8,8 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/libras-translator.js"
+      "import": "./dist/libras-translator.js",
+      "types": "./dist/index.d.ts"
     }
   },
   "files": [
