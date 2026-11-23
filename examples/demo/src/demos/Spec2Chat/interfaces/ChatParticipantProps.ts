@@ -1,4 +1,4 @@
-import type { LibrasChatMessage, LibrasChatRole } from 'libras-translator';
+import type { LibrasChatMessage, LibrasChatRole } from 'libras-kit';
 
 export interface ChatParticipantProps {
   role: LibrasChatRole;

@@ -4,7 +4,7 @@ import { useChat } from '../../../../hooks/useChat/index.ts';
 import { useLibrasIntegration } from '../../../../hooks/useLibrasIntegration/index.ts';
 import { useMediaEffects } from '../../../../hooks/useMediaEffects/index.ts';
 import { useVAD } from '../../../../hooks/useVAD/index.ts';
-import { useLibrasTranslator, type SignRenderer } from 'libras-translator';
+import { useLibrasTranslator, type SignRenderer } from 'libras-kit';
 import { useCallStore } from '../../../../store/useCallStore/index.ts';
 import { useControlsStore } from '../../../../store/useControlsStore/index.ts';
 import { VideoGrid } from '../../../../components/VideoGrid/index.ts';

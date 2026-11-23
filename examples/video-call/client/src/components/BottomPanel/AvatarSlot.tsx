@@ -1,4 +1,4 @@
-import type { LibrasTranslatorApi } from 'libras-translator';
+import type { LibrasTranslatorApi } from 'libras-kit';
 import { AvatarContainer, AvatarHint, LibrasStage } from './styles.ts';
 
 interface AvatarSlotProps {

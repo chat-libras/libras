@@ -1,4 +1,4 @@
-import { LibrasChat } from 'libras-translator';
+import { LibrasChat } from 'libras-kit';
 import { VideoBox } from '../../../components/VideoBox';
 import type { ChatParticipantProps } from '../interfaces/ChatParticipantProps';
 

@@ -1,4 +1,4 @@
-import { LibrasChatPanel } from 'libras-translator';
+import { LibrasChatPanel } from 'libras-kit';
 import type { PanelParticipantProps } from '../interfaces/PanelParticipantProps';
 
 export function PanelParticipant({

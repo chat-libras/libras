@@ -1,10 +1,10 @@
-import type { LibrasChatPanelRole } from 'libras-translator';
+import type { LibrasChatRole } from 'libras-kit';
 
 export interface ProviderParticipantProps {
-  role: LibrasChatPanelRole;
+  role: LibrasChatRole;
   badge: string;
   hint: string;
   incomingMessage: string;
   onMessage: (text: string) => void;
-  labels: Record<LibrasChatPanelRole, string>;
+  labels: Record<LibrasChatRole, string>;
 }

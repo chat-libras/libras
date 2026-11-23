@@ -6,11 +6,11 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      'libras-translator': resolve(__dirname, '../../../src/libras/index.ts'),
+      'libras-kit': resolve(__dirname, '../../../packages/libras-kit/src/libras/index.ts'),
     },
   },
-  // Serve os assets estáticos do public/ raiz (inclui /vlibras/vlibras.js)
-  publicDir: resolve(__dirname, '../../../public'),
+  // Serve os assets estáticos do vlibras (inclui /vlibras/vlibras.js)
+  publicDir: resolve(__dirname, '../../../packages/libras-kit/public'),
   server: {
     port: 5174,
     open: true,

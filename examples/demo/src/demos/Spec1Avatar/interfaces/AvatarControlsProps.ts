@@ -1,4 +1,4 @@
-import type { LibrasTranslatorApi } from 'libras-translator';
+import type { LibrasTranslatorApi } from 'libras-kit';
 
 export interface AvatarControlsProps {
   libras: LibrasTranslatorApi;

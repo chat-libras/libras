@@ -6,10 +6,10 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      'libras-translator': resolve(__dirname, '../../src/libras/index.ts'),
+      'libras-kit': resolve(__dirname, '../../packages/libras-kit/src/libras/index.ts'),
     },
   },
-  publicDir: resolve(__dirname, '../../public'),
+  publicDir: resolve(__dirname, '../../packages/libras-kit/public'),
   root: '.',
   server: {
     port: 5173,

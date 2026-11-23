@@ -13,7 +13,7 @@
 import { useMemoryChannel } from './hooks/useMemoryChannel';
 import { PanelParticipant } from './components/PanelParticipant';
 
-const LABELS = { speaker: 'Professor', listener: 'Aluno' } as const;
+const LABELS = { sender: 'Professor', receiver: 'Aluno' } as const;
 
 export function Spec3ChatPanel() {
   const { speakerMsg, listenerMsg, onSpeakerMessage, onListenerMessage } = useMemoryChannel();
@@ -21,8 +21,8 @@ export function Spec3ChatPanel() {
   return (
     <div className="call__grid">
       <PanelParticipant
-        role="speaker"
-        badge="🎤 Professor (speaker)"
+        role="sender"
+        badge="🎤 Professor (sender)"
         hint="Fala ou digita. Estado interno — zero props além de role."
         incomingMessage={listenerMsg}
         onMessage={onSpeakerMessage}
@@ -30,8 +30,8 @@ export function Spec3ChatPanel() {
       />
 
       <PanelParticipant
-        role="listener"
-        badge="🧏 Aluno (listener)"
+        role="receiver"
+        badge="🧏 Aluno (receiver)"
         hint="Vê o professor em Libras. Responde por texto."
         incomingMessage={speakerMsg}
         onMessage={onListenerMessage}

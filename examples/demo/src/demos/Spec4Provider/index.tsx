@@ -13,12 +13,12 @@
  *     → LibrasProvider           → injeta config no contexto
  *       → ProviderParticipant x2 → herdam o label do Provider
  */
-import { LibrasProvider } from 'libras-translator';
+import { LibrasProvider } from 'libras-kit';
 import { useProviderDemo } from './hooks/useProviderDemo';
 import { ProviderConfig } from './components/ProviderConfig';
 import { ProviderParticipant } from './components/ProviderParticipant';
 
-const LABELS = { speaker: 'Atendente', listener: 'Paciente' } as const;
+const LABELS = { sender: 'Atendente', receiver: 'Paciente' } as const;
 
 export function Spec4Provider() {
   const {
@@ -34,8 +34,8 @@ export function Spec4Provider() {
       <LibrasProvider config={{ strings: { chatSendButton: customLabel } }}>
         <div className="call__grid">
           <ProviderParticipant
-            role="speaker"
-            badge="🏥 Atendente (speaker)"
+            role="sender"
+            badge="🏥 Atendente (sender)"
             hint="Botão usa o label do Provider — sem prop local."
             incomingMessage={listenerMsg}
             onMessage={onSpeakerMessage}
@@ -43,8 +43,8 @@ export function Spec4Provider() {
           />
 
           <ProviderParticipant
-            role="listener"
-            badge="🧏 Paciente (listener)"
+            role="receiver"
+            badge="🧏 Paciente (receiver)"
             hint="Botão de resposta também herda o label do Provider."
             incomingMessage={speakerMsg}
             onMessage={onListenerMessage}

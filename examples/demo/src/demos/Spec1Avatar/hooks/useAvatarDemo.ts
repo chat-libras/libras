@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useLibrasTranslator, type LibrasTranslatorApi } from 'libras-translator';
+import { useLibrasTranslator, type LibrasTranslatorApi } from 'libras-kit';
 
 export interface AvatarDemoApi {
   libras: LibrasTranslatorApi;

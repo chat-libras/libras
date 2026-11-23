@@ -12,7 +12,7 @@
  * Pré-requisito: rodar em Chrome (MediaRecorder + captureStream)
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useLibrasTranslator } from 'libras-translator';
+import { useLibrasTranslator } from 'libras-kit';
 import { PRESETS, ASPECT, type PresetId } from './presets';
 import { useCameraStream } from './hooks/useCameraStream';
 import { useRecorder } from './hooks/useRecorder';

@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useControlsStore } from '../../store/useControlsStore/index.ts';
 import { DebugPanel } from '../DebugPanel/index.ts';
 import { getClientEnv } from '../../env.ts';
-import type { LibrasTranslatorApi } from 'libras-translator';
+import type { LibrasTranslatorApi } from 'libras-kit';
 import { Wrap } from './styles.ts';
 import { AvatarSlot } from './AvatarSlot.tsx';
 

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { LibrasObserver } from 'libras-translator';
-import type { SignRenderer } from 'libras-translator';
+import { LibrasObserver } from 'libras-kit';
+import type { SignRenderer } from 'libras-kit';
 import { debugBus } from '../../debug/event-bus/index.ts';
 import { emitDebugEvent } from '../../debug/debug-emitter/index.ts';
 import type { ChatMessage } from '../useChat/useChat.types.ts';

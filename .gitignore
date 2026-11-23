@@ -48,3 +48,4 @@ Thumbs.db
 /me
 .history/
 video-call/server/config/db.sqlite
+.claude/
