@@ -120,8 +120,8 @@ confira os `200`:
 ## Hospedando em outro caminho
 
 Se preferir servir os assets de outro lugar (CDN, subpasta), passe `bundleUrl` e
-`targetPath` nas opções do plugin `vlibras` — ver a tabela de configuração no
-[README](../README.md).
+`targetPath` nas opções do plugin `vlibras` — ver a tabela de configuração na
+[Referência da API](/api).
 
 ## Por que o avatar soletrava tudo (e a correção)
 

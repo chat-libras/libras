@@ -5,5 +5,10 @@
     "packages/*",
     "examples/demo",
     "examples/video-call/client"
-  ]
+  ],
+  "scripts": {
+    "docs:dev": "npm run dev --workspace=packages/docs",
+    "docs:build": "npm run build --workspace=packages/docs",
+    "docs:preview": "npm run preview --workspace=packages/docs"
+  }
 }
