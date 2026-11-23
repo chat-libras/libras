@@ -1,6 +1,6 @@
-# libras-translator
+# libras-kit
 
-Plugin React que embute o avatar de Libras **VLibras** (Unity/WebGL, gov.br) em qualquer aplicativo de videochamada. Um participante fala ou escreve; o participante surdo vê a mensagem sinalizada em tempo real pelo avatar oficial — sem ASR proprietário obrigatório, sem servidor próprio para o avatar.
+Plugin React que embute o avatar de Libras **VLibras** (Unity/WebGL, gov.br) em qualquer aplicativo. Um participante fala ou escreve; o participante surdo vê a mensagem sinalizada em tempo real pelo avatar oficial — sem ASR proprietário obrigatório, sem servidor próprio para o avatar.
 
 > O VLibras é **LGPLv3**. Os sinais são oficiais e revisados pelo MECDAISY/Serpro.
 
@@ -8,34 +8,32 @@ Plugin React que embute o avatar de Libras **VLibras** (Unity/WebGL, gov.br) em 
 
 ```bash
 # ainda não publicado no npm — importe pelo caminho relativo
-# npm install libras-translator  ← futuro
+# npm install libras-kit  ← futuro
 ```
 
 ```tsx
-import { LibrasChat, type LibrasChatMessage } from 'libras-translator';
-import { useState } from 'react';
+import { LibrasAvatar } from 'libras-kit';
 
-export function Chamada() {
-  const [messages, setMessages] = useState<LibrasChatMessage[]>([]);
-
-  const handleSend = (text: string) => {
-    setMessages((m) => [
-      ...m,
-      { id: crypto.randomUUID(), from: 'sender', text },
-    ]);
-  };
-
-  return (
-    <>
-      
-      <LibrasChat role="sender" messages={messages} onSend={handleSend} />
-      <LibrasChat role="receiver" messages={messages} onSend={() => {}} />
-    </>
-  );
+// microfone local → avatar sinaliza automaticamente
+export function PaginaLibras() {
+  return <LibrasAvatar />;
 }
 ```
 
-Em produção, cada `role` roda em máquinas separadas; ligue `messages`/`onSend` ao seu transporte (WebSocket, Firebase, Vonage `signal()`, etc.).
+```tsx
+// com chat visível e estilo próprio
+import { LibrasAvatar } from 'libras-kit';
+
+export function PaginaLibrasComChat() {
+  return (
+    <LibrasAvatar
+      showChat
+      classNames={{ root: 'widget', avatar: 'avatar-box', chat: 'chat-box' }}
+      onSend={(text) => ws.send(text)}
+    />
+  );
+}
+```
 
 ## Documentação por contexto
 
@@ -43,31 +41,27 @@ Em produção, cada `role` roda em máquinas separadas; ligue `messages`/`onSend
 |----------|-----------|
 | Referência completa da API | [docs/api.md](docs/api.md) |
 | Primeiro uso, instalação e demo | [docs/guides/getting-started.md](docs/guides/getting-started.md) |
-| Configurar ASR (microfone, Deepgram, customizado) | [docs/guides/asr.md](docs/guides/asr.md) |
+| Configurar ASR (microfone, customizado, fallback) | [docs/guides/asr.md](docs/guides/asr.md) |
 | Integrar com Vonage, Daily, Jitsi, WebRTC, Teams | [docs/guides/video-call-adapters.md](docs/guides/video-call-adapters.md) |
-| Tematização, i18n, acessibilidade, controles | [docs/guides/customization.md](docs/guides/customization.md) |
+| Tematização, i18n, acessibilidade | [docs/guides/customization.md](docs/guides/customization.md) |
 | Arquitetura interna (mantenedores/IA) | [docs/architecture.md](docs/architecture.md) |
 | Hospedar os assets do VLibras offline | [docs/vlibras-setup.md](docs/vlibras-setup.md) |
-| Specs dos componentes | [docs/specs/chat-e-avatar.md](docs/specs/chat-e-avatar.md) |
-| Specs dos adapters | [docs/specs/adapter-videochamada.md](docs/specs/adapter-videochamada.md) |
 
 ## Componentes e Hooks
 
 | Export | O que faz | Quando usar |
 |--------|-----------|-------------|
-| `<LibrasChat>` | Chat assimétrico entre participantes com avatar + ASR | Produto principal; você gerencia o histórico e o transporte |
-| `<LibrasChatPanel>` | Versão automanaged do chat (estado interno) | Integração rápida sem precisar de estado próprio |
-| `<LibrasTranslator>` | Avatar + ASR com controles embutidos | Sinalizar áudio remoto sem o chat |
-| `useLibrasTranslator` | Hook base de `<LibrasTranslator>` | UI totalmente customizada com ASR |
-| `useLibrasAvatar` | Só o avatar, sem ASR | Participante surdo (role='receiver'); você passa o texto |
-| `<LibrasProvider>` | Configuração global (opt-in) | Definir defaults de VLibras/ASR/strings para toda a árvore |
+| `<LibrasAvatar>` | Avatar headless: microfone → Libras; chat opcional via `showChat` | Componente principal para qualquer caso de uso |
+| `useLibrasTranslator` | Hook com avatar + ASR (base do componente) | UI totalmente customizada |
+| `useLibrasAvatar` | Só o avatar, sem ASR | Sinalizar texto de outra fonte (legenda, WebSocket) |
+| `<LibrasProvider>` | Configuração global opt-in | Defaults de VLibras/ASR/strings para toda a árvore |
 | Adapters | Extraem `MediaStream` de SDKs de vídeo | Integrar com Vonage, Daily, Jitsi, WebRTC puro |
 
 ## Projetos executáveis
 
 | Projeto | Pasta | Porta | Para que | Como rodar |
 |---------|-------|-------|----------|------------|
-| **Demo** | `/` (raiz) | 5173 | Testar a lib em memória, sem backend | `npm run dev` |
+| **Demo** | `packages/libras-kit/` | 5173 | Testar a lib, sem backend | `cd packages/libras-kit && npm run dev` |
 | **Video-call** | `examples/video-call/` | 5174 + 3001 | WebRTC real com server + DB SQLite | `yarn vc` (na raiz) |
 
 Ver instruções detalhadas em [docs/guides/getting-started.md](docs/guides/getting-started.md).

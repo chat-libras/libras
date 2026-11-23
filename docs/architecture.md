@@ -1,5 +1,5 @@
 
-# Arquitetura — libras-translator
+# Arquitetura — libras-kit
 
 Documento técnico para uso por modelos de IA ao fazer alterações. Complementa o CLAUDE.md (comandos e visão geral) e o README.md (uso da biblioteca).
 
@@ -8,14 +8,15 @@ Documento técnico para uso por modelos de IA ao fazer alterações. Complementa
 ## Camadas e fronteiras
 
 ```
-src/libras/
+packages/libras-kit/src/libras/
   core/       ← lógica pura; SEM imports de React, SEM imports de adapters
   ui/         ← hooks React + componentes; pode importar de core/, não de adapters/
   adapters/   ← bridges de plataforma; pode importar de core/; NÃO importa de ui/
   index.ts    ← re-exports da API pública
 
-src/demo/     ← harness de dev; pode importar tudo; nunca é importado pela lib
-src/test/     ← testes; importam de core/ e ui/ diretamente
+packages/libras-kit/src/test/   ← testes; importam de core/ e ui/ diretamente
+examples/demo/                  ← harness de dev; pode importar tudo; nunca é importado pela lib
+examples/video-call/            ← videochamada WebRTC real (server + client)
 ```
 
 **Regra de dependência:** as setas apontam para dentro (`adapters → core`, `ui → core`). Cruzamentos inversos quebram a testabilidade e o isolamento do Unity.
@@ -50,7 +51,7 @@ O Unity/WebGL é pesado e **não pode ser instanciado mais de uma vez**. O `play
 - Primeira chamada: cria o player, armazena a promise, resolve quando o evento `load` dispara.
 - Chamadas subsequentes (StrictMode monta 2×, troca de aba remonta componentes): reutiliza a promise e **move** o canvas Unity para o novo container, em vez de criar um novo.
 
-`rendererSingleton` em `ui/useLibrasAvatar.ts` segue a mesma lógica para o `VLibrasSignRenderer`.
+O `rendererRef` vive no React Context (`LibrasRendererContext`), não em módulo global — cada `<LibrasProvider>` isola seu próprio renderer. Fora de um provider, o `globalRendererRef` serve como fallback singleton.
 
 ### Queue com backpressure (`core/vlibras-renderer.ts`)
 
@@ -71,14 +72,8 @@ A `VLibrasSignRenderer` resolve isso com uma fila + backpressure:
 participante ouvinte fala / escreve
     │
     ▼
-useLibrasTranslator / LibrasChat
-    │ onSend(text)
-    ▼
-LibrasChat.tsx → enfileira em `messages[]`
-    │
-    ▼ (no lado cliente)
-useLibrasAvatar.translate(text)
-    │
+<LibrasAvatar> ou useLibrasTranslator
+    │ translate(text)
     ▼
 VLibrasSignRenderer.play(text)
     │
@@ -106,14 +101,14 @@ player.translate(text)   [vlibras-loader.ts: window.VLibras.Player]
 
 ## Problema dos hosts `-dth`
 
-O bundle `public/vlibras/vlibras.js` embute as URLs dos serviços do VLibras. Há dois conjuntos de hosts:
+O bundle `packages/libras-kit/public/vlibras/vlibras.js` embute as URLs dos serviços do VLibras. Há dois conjuntos de hosts:
 
 | Host | Tradutor | Dicionário |
 |------|----------|------------|
 | `*-dth.vlibras.gov.br` (legado) | 401 Unauthorized | 200 sem CORS header |
 | `*.vlibras.gov.br` (atual) | 200 + CORS ✅ | 200 + CORS ✅ |
 
-As linhas relevantes no bundle (linhas 396–398 em `public/vlibras/vlibras.js`):
+As linhas relevantes no bundle:
 
 ```js
 translatorUrl      = "https://traducao2.vlibras.gov.br/translate"
@@ -123,11 +118,11 @@ dictionaryStaticUrl = "https://dicionario2.vlibras.gov.br/static/BUNDLES/2018.3.
 
 Se um Claude futuro alterar o bundle ou o loader e o avatar voltar a soletrar tudo, a primeira checagem é:
 ```bash
-grep -n 'translatorUrl\|dictionaryUrl' public/vlibras/vlibras.js
+grep -n 'translatorUrl\|dictionaryUrl' packages/libras-kit/public/vlibras/vlibras.js
 # garantir que nenhuma URL contém "-dth"
 ```
 
-O `DEFAULT_TRANSLATOR_URL` em `vlibras-loader.ts` sobrescreve o `translatorUrl` do bundle via `Player({ translator })`. Self-hosting via Docker usa `/vlibras-translate` (proxy Vite) nesta opção.
+O `DEFAULT_TRANSLATOR_URL` em `vlibras-constants.ts` sobrescreve o `translatorUrl` do bundle via `Player({ translator })`. Self-hosting via Docker usa `/vlibras-translate` (proxy Vite) nesta opção.
 
 ---
 
@@ -137,17 +132,12 @@ O `DEFAULT_TRANSLATOR_URL` em `vlibras-loader.ts` sobrescreve o `translatorUrl` 
 
 ```
 AudioSource:  { kind: 'microphone' } | { kind: 'stream', stream: MediaStream }
-ASROptions:   { provider: 'webspeech', lang? } | { provider: 'deepgram', apiKey, lang? }
+ASROptions:   { provider: 'webspeech', lang? } | { provider: 'custom', factory: ASRFactory }
 ```
 
-Regra de escolha automática:
+Regra de escolha automática (em `ui/utils/resolveAsr.ts`):
 - `kind: 'microphone'` → sempre `webspeech` (grátis, acessa mic diretamente).
-- `kind: 'stream'` → precisa de `deepgram` (Web Speech API não consegue ouvir MediaStream).
-
-Para adicionar um novo provedor ASR:
-1. Criar `core/asr/meu-provedor.ts` com a mesma assinatura de `cloud-asr.ts`.
-2. Adicionar um caso em `phrase-source.ts` no switch de `provider`.
-3. Extender o tipo `ASROptions` em `phrase-source.ts`.
+- `kind: 'stream'` → exige `custom` factory (Web Speech API não consegue ouvir MediaStream).
 
 ---
 
@@ -158,38 +148,38 @@ Cada adapter transforma a fonte de áudio da plataforma em um `MediaStream` padr
 | Adapter | Entrada | Saída |
 |---------|---------|-------|
 | `webrtc.ts` | `<video>` / `MediaStreamTrack` / `RTCPeerConnection` | `MediaStream` |
-| `vonage.ts` | `Subscriber` (Vonage SDK) | `MediaStream` |
 | `captions.ts` | string (legenda ao vivo) | chama `translate()` diretamente |
 
 O `captions.ts` é diferente: não produz `MediaStream`; em vez disso, expõe um `CaptionSink` que descarta duplicatas em <3s (eco de legenda) e chama `translate(text)` diretamente — útil para plataformas como Teams que expõem legendas mas não o áudio.
 
 ---
 
-## Componentes UI
+## Estrutura da UI
 
-### Hierarquia do `<LibrasChat>`
-
-```
-LibrasChat
-├── SenderSide       (role="sender")
-│   ├── useDoctorSpeech    ← ASR + envio de texto
-│   ├── ChatLog            ← histórico de mensagens
-│   └── SendForm           ← campo de texto + botão
-└── ReceiverSide       (role="receiver")
-    ├── useLibrasAvatar    ← avatar VLibras (sinaliza)
-    ├── useClientSignaling ← detecta novas mensagens e sinaliza
-    ├── ChatLog
-    └── SendForm
-```
-
-### Hook de composição
+### Hierarquia de responsabilidade
 
 ```
-useLibrasAvatar   ← só o avatar (base)
+ui/context/     ← LibrasProvider + contextos (config global + rendererRef isolado)
+ui/consts/      ← strings padrão e resolução de overrides
+ui/interfaces/  ← tipos TypeScript dos componentes e provider
+ui/hooks/       ← useLibrasAvatar (base) + useLibrasTranslator (avatar+ASR)
+ui/components/  ← LibrasAvatar (componente único headless)
+ui/utils/       ← resolveAsr (escolha de ASR baseada em AudioSource)
+```
+
+### Composição de hooks
+
+```
+useLibrasAvatar    ← só o avatar (base)
     ↑ compõe
-useLibrasTranslator  ← avatar + ASR
+useLibrasTranslator   ← avatar + ASR
     ↑ usado por
-LibrasTranslator (componente standalone)
-    ou
-ReceiverSide (dentro do LibrasChat)
+LibrasAvatar (componente — showChat: boolean)
 ```
+
+### Headless: sem CSS padrão
+
+`<LibrasAvatar>` não emite nenhuma classe CSS. O consumidor aplica estilos via:
+- `classNames.root`, `classNames.avatar`, `classNames.chat`, `classNames.messages`, `classNames.message`, `classNames.input`
+- `styles.*` (mesmo mapa com `React.CSSProperties`)
+- Atributos `data-source="speech|typed"` em cada `<li>` de mensagem

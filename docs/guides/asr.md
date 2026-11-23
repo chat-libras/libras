@@ -1,167 +1,118 @@
-# Configuracao de ASR
+# Configuração de ASR
 
-ASR (Automatic Speech Recognition) converte a fala de um participante em texto, que e entao traduzido para glosa e sinalizado pelo avatar. Voce so precisa configurar ASR se algum participante vai **falar** (e nao apenas digitar).
+ASR (Automatic Speech Recognition) converte a fala de um participante em texto, que é então traduzido para glosa e sinalizado pelo avatar. Você só precisa configurar ASR se algum participante vai **falar** (e não apenas digitar).
 
-## Quando voce precisa de ASR
+## Quando você precisa de ASR
 
-| Cenario | ASR necessario? |
+| Cenário | ASR necessário? |
 |---------|----------------|
-| Participante digita, outro ve em Libras | Nao — passe texto diretamente para `translate()` |
-| Participante fala pelo microfone | Sim — Web Speech API (gratis) |
-| Traduzir o audio remoto de uma chamada WebRTC | Sim — ASR de nuvem (Deepgram ou customizado) |
-| Plataforma expoe legendas ao vivo (Teams) | Nao — use `CaptionSink` em vez de ASR |
+| Participante digita, outro vê em Libras | Não — passe texto diretamente para `translate()` |
+| Participante fala pelo microfone | Sim — Web Speech API (grátis) |
+| Traduzir o áudio remoto de uma chamada WebRTC | Sim — ASR de nuvem (customizado) |
+| Plataforma expõe legendas ao vivo (Teams) | Não — use `CaptionSink` em vez de ASR |
 
 ## Web Speech API
 
-**Gratis. Funciona com microfone. Apenas Chrome e Edge.**
+**Grátis. Funciona com microfone. Apenas Chrome e Edge.**
 
 ```tsx
-import { LibrasTranslator } from 'libras-translator';
+import { LibrasAvatar } from 'libras-kit';
 
-<LibrasTranslator
+// asr webspeech pt-BR é o default quando audio é microphone
+<LibrasAvatar audio={{ kind: 'microphone' }} />
+
+// explícito:
+<LibrasAvatar
   audio={{ kind: 'microphone' }}
   asr={{ provider: 'webspeech', lang: 'pt-BR' }}
-  showCaptions
 />
 ```
 
-O `lang` padrao ja e `'pt-BR'`. Voce pode omiti-lo.
+**Limitações:**
 
-```tsx
-// forma mais curta — audio microphone + webspeech pt-BR sao os defaults
-<LibrasTranslator audio={{ kind: 'microphone' }} />
-```
-
-**Limitacoes:**
-
-- Funciona apenas com `audio: { kind: 'microphone' }` — a API do navegador so acessa o microfone local.
-- Nao funciona com o audio remoto de uma chamada (MediaStream de WebRTC).
-- Nao disponivel no Firefox ou Safari.
-- O navegador pode pedir permissao de microfone.
-
-## ASR de nuvem (exemplo: Deepgram)
-
-**Pago. Funciona com microfone ou stream de chamada.**
-
-Crie uma conta em [deepgram.com](https://deepgram.com) e obtenha uma API key.
-
-> **Seguranca:** nao exponha a API key no frontend. Use um proxy no servidor que faca a conexao com o Deepgram e repasse o stream. O exemplo abaixo e simplificado; em producao envolva a key em uma variavel de ambiente do servidor.
-
-```tsx
-import { LibrasTranslator } from 'libras-translator';
-
-// com microfone local:
-<LibrasTranslator
-  audio={{ kind: 'microphone' }}
-  asr={{ provider: 'deepgram', apiKey: import.meta.env.VITE_DEEPGRAM_KEY, lang: 'pt-BR' }}
-/>
-
-// com audio remoto de chamada WebRTC:
-<LibrasTranslator
-  audio={{ kind: 'stream', stream: remoteAudioStream }}
-  asr={{ provider: 'deepgram', apiKey: import.meta.env.VITE_DEEPGRAM_KEY }}
-/>
-```
-
-O `lang` padrao e `'pt-BR'`.
-
-> O mesmo padrao se aplica a qualquer provedor de ASR de nuvem: AssemblyAI, Azure Cognitive Services Speech, AWS Transcribe, Google Cloud STT, etc. Implemente a interface `ASRFactory` (secao abaixo) para qualquer um deles.
+- Funciona apenas com `audio: { kind: 'microphone' }` — a API do navegador só acessa o microfone local.
+- Não funciona com o áudio remoto de uma chamada (MediaStream de WebRTC).
+- Não disponível no Firefox ou Safari.
+- O navegador pode pedir permissão de microfone.
 
 ## ASR customizado
 
-Implemente a interface `ASRFactory` para integrar qualquer servico de transcricao.
+Implemente a interface `ASRFactory` para integrar qualquer serviço de transcrição (Deepgram, AssemblyAI, Azure, AWS Transcribe, etc.).
 
 ```ts
-import type { ASRFactory, CloudASR } from 'libras-translator';
+import type { ASRFactory } from 'libras-kit';
 
-const myASRFactory: ASRFactory = ({ onPhrase, onInterim, onError, onListening }) => {
-  let active = false;
+const myASRFactory: ASRFactory = ({ onTranscript, onError }) => ({
+  async start(stream: MediaStream) {
+    // conectar ao serviço de ASR com `stream`
+    const ws = new WebSocket('wss://meu-asr.exemplo.com/transcribe');
 
-  return {
-    async start(stream: MediaStream) {
-      active = true;
-      onListening(true);
+    const recorder = new MediaRecorder(stream);
+    recorder.ondataavailable = (e) => {
+      if (ws.readyState === WebSocket.OPEN) ws.send(e.data);
+    };
+    recorder.start(250);
 
-      // exemplo: conectar a um servico WebSocket de ASR
-      const ws = new WebSocket('wss://meu-asr.exemplo.com/transcribe');
+    ws.onmessage = (e) => {
+      const { text, isFinal } = JSON.parse(e.data);
+      onTranscript(text, isFinal);  // true = frase final → avatar; false = parcial
+    };
 
-      // enviar o audio do stream
-      const recorder = new MediaRecorder(stream);
-      recorder.ondataavailable = (e) => {
-        if (ws.readyState === WebSocket.OPEN) ws.send(e.data);
-      };
-      recorder.start(250);
+    ws.onerror = () => onError('ASR connection error');
+  },
 
-      ws.onmessage = (e) => {
-        const { text, isFinal } = JSON.parse(e.data);
-        if (isFinal) {
-          onPhrase(text);  // frase final → vai para o avatar
-        } else {
-          onInterim(text); // parcial → exibido na legenda
-        }
-      };
-
-      ws.onerror = (e) => onError(new Error('ASR connection error'));
-    },
-
-    stop() {
-      active = false;
-      onListening(false);
-      // encerrar conexao WebSocket e MediaRecorder
-    },
-  };
-};
+  stop() {
+    // encerrar conexão WebSocket e MediaRecorder
+  },
+});
 ```
 
 ```tsx
-<LibrasTranslator
-  audio={{ kind: 'stream', stream }}
+<LibrasAvatar
+  audio={{ kind: 'stream', stream: remoteAudioStream }}
   asr={{ provider: 'custom', factory: myASRFactory }}
 />
 ```
 
-### Callbacks disponíveis
+### Callbacks
 
 | Callback | Quando chamar |
 |----------|---------------|
-| `onPhrase(text)` | Frase final reconhecida → vai para a fila do avatar |
-| `onInterim(text)` | Resultado parcial → exibido na legenda ao vivo |
-| `onError(err)` | Erro de conexao ou de transcricao |
-| `onListening(boolean)` | Estado da escuta mudou (para atualizar a UI) |
+| `onTranscript(text, true)` | Frase final reconhecida → vai para a fila do avatar |
+| `onTranscript(text, false)` | Resultado parcial → exibido no `interim` do hook |
+| `onError(message)` | Erro de conexão ou de transcrição |
 
 ## `withWebSpeechFallback`
 
-Envolve uma factory primaria e cai no Web Speech API automaticamente se:
+Envolve uma factory primária e cai no Web Speech API automaticamente se:
 
-- O stream fornecido estiver vazio (sem faixas de audio), ou
-- `start()` da factory primaria lancar uma excecao.
+- O stream fornecido estiver vazio (sem faixas de áudio), ou
+- `start()` da factory primária lançar uma exceção.
 
 ```ts
-import { withWebSpeechFallback } from 'libras-translator';
+import { withWebSpeechFallback } from 'libras-kit';
 
 const resilientFactory = withWebSpeechFallback(myDeepgramFactory, 'pt-BR');
 
-<LibrasTranslator
+<LibrasAvatar
   audio={{ kind: 'stream', stream: remoteStream }}
   asr={{ provider: 'custom', factory: resilientFactory }}
 />
 ```
 
-Util em ambientes onde o stream remoto pode ainda nao estar disponivel quando o componente monta — evita tela de erro enquanto o ASR de nuvem nao tem sinal.
+Útil em ambientes onde o stream remoto pode ainda não estar disponível quando o componente monta — evita tela de erro enquanto o ASR de nuvem não tem sinal.
 
-## Tabela de decisao
+## Tabela de decisão
 
-| Situacao | Provider recomendado |
+| Situação | Provider recomendado |
 |----------|---------------------|
-| Participante usa microfone local, Chrome/Edge | `webspeech` (gratis) |
-| Audio remoto de chamada WebRTC | ASR de nuvem (`custom` com `ASRFactory`) |
-| Precisa suportar Firefox ou Safari com microfone | ASR de nuvem (`custom` com `ASRFactory`) |
-| Servico de ASR proprio | `custom` com `ASRFactory` |
-| Stream pode estar indisponivel na inicializacao | `custom` com `withWebSpeechFallback` |
-| Plataforma expoe legendas (Teams, Meet API) | `CaptionSink` — ver [video-call-adapters.md](video-call-adapters.md) |
+| Participante usa microfone local, Chrome/Edge | `webspeech` (grátis, default) |
+| Áudio remoto de chamada WebRTC | `custom` com `ASRFactory` |
+| Precisa suportar Firefox ou Safari com microfone | `custom` com `ASRFactory` |
+| Serviço de ASR próprio | `custom` com `ASRFactory` |
+| Stream pode estar indisponível na inicialização | `custom` com `withWebSpeechFallback` |
+| Plataforma expõe legendas (Teams, Meet API) | `CaptionSink` — ver [video-call-adapters.md](video-call-adapters.md) |
 
-## Padrao sem custo de ASR
+## Padrão sem custo de ASR
 
-Se ambos os lados da chamada tiverem acesso a `libras-translator`, cada um pode transcrever a propria fala localmente (Web Speech, gratis) e enviar apenas o **texto** via sinal/mensagem para o outro lado. O `<LibrasChat>` implementa exatamente isso: um participante fala → texto transcrito localmente → enviado via `onSend` → o outro participante ve em Libras.
-
-Nenhuma API key necessaria. Nenhum audio trafega pela rede para transcricao.
+Cada lado transcreve a própria fala localmente (Web Speech, grátis) e envia apenas o **texto** via `onSend`/WebSocket para o outro lado, que usa `translate()` diretamente. Nenhuma API key necessária. Nenhum áudio trafega pela rede para transcrição.
